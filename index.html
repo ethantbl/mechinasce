@@ -115,6 +115,7 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
       <button class="tab" onclick="showTab('talmidim',event)">תלמידים</button>
       <button class="tab" onclick="showTab('shiduch',event)">שידוך</button>
       <button class="tab" onclick="showTab('recap',event)">דוח חודשי</button>
+      <button class="tab" onclick="showTab('stats',event)">📊 סטטיסטיקות</button>
       <button class="tab" onclick="showTab('gibuy',event)">גיבוי</button>
     </div>
 
@@ -129,11 +130,13 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
         <div style="margin-top:12px;">
           <label>סוג</label>
           <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
-            <button id="btn-parach" class="btn btn-sm" style="background:#1e40af;color:#fff;border-radius:20px;" onclick="setStatutM('פרח')">פרח</button>
-            <button id="btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutM('שכיר')">שכיר</button>
+            <button id="btn-parach" class="btn btn-sm" style="background:#1e40af;color:#fff;border-radius:20px;" onclick="setStatutM('פר&quot;ח')">פר"ח</button>
+            <button id="btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutM('שכר')">שכר</button>
           </div>
-          <input type="hidden" id="m-statut" value="פרח" />
+          <input type="hidden" id="m-statut" value='פר"ח' />
         </div>
+        <label style="margin-top:14px;">הערות</label>
+        <input type="text" id="m-note" placeholder="לדוגמה: מעדיף בוקר, קשה לשבץ..." style="margin-top:4px;" />
         <label style="margin-top:14px;">זמינויות (יום + שעות + מקצוע)</label>
         <div class="creneau-form">
           <div class="creneau-row">
@@ -149,7 +152,13 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
         <div style="margin-top:14px;"><button class="btn btn-primary" onclick="sauvegarderMetgaber()">שמור מתגבר</button></div>
       </div>
       <p class="section-title" style="margin-top:1.5rem;">מתגברים רשומים</p>
-      <div style="margin-bottom:12px;"><button class="btn btn-sm" id="btn-tri-m" onclick="toggleTriM()">א-ב ↕</button></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;flex-direction:row-reverse;align-items:center;">
+        <button class="btn btn-sm" id="btn-tri-m" onclick="toggleTriM()">א-ב ↕</button>
+        <select id="filtre-matiere-m" onchange="renderMetgabrim()" style="width:auto;font-size:13px;padding:5px 10px;">
+          <option value="">כל המקצועות</option>
+          <option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option>
+        </select>
+      </div>
       <div id="liste-metgabrim"><div class="empty">טוען נתונים...</div></div>
     </div>
 
@@ -161,6 +170,8 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
           <div><label>שם התלמיד</label><input type="text" id="t-nom" placeholder="לדוגמה: דוד כהן" /></div>
           <div><label>טלפון</label><input type="tel" id="t-tel" placeholder="050-9876543" /></div>
         </div>
+        <label style="margin-top:14px;">הערות</label>
+        <input type="text" id="t-note" placeholder="לדוגמה: מעדיף ערב, מתקשה במתמטיקה..." style="margin-top:4px;" />
         <label style="margin-top:14px;">זמינויות ומקצועות</label>
         <div class="creneau-form">
           <div class="creneau-row">
@@ -227,6 +238,11 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
       <div id="recap-content"></div>
     </div>
   </div>
+    <!-- סטטיסטיקות -->
+    <div id="tab-stats" class="section">
+      <div id="stats-content"></div>
+    </div>
+
     <!-- גיבוי -->
     <div id="tab-gibuy" class="section">
       <p class="section-title">גיבוי נתונים</p>
@@ -350,9 +366,110 @@ function showTab(t,e){
   if(t==='talmidim'){updateStats();renderTalmidim();}
   if(t==='shiduch'){renderSMatieres();document.getElementById('resultats-shiduch').innerHTML='';}
   if(t==='recap'){const n=new Date();document.getElementById('recap-mois').value=String(n.getMonth()+1).padStart(2,'0');document.getElementById('recap-annee').value=n.getFullYear();genererRecap();}
+  if(t==='stats'){renderStats();}
   if(t==='gibuy'){}
 }
 
+function renderStats(){
+  const metgabrim=getM(), talmidim=getT();
+  const el=document.getElementById('stats-content');
+
+  // Stats globales
+  const nbM=metgabrim.length;
+  const nbT=talmidim.length;
+  const nbActif=talmidim.filter(t=>estActifT(t)).length;
+  const nbAttente=nbT-nbActif;
+  const nbParach=metgabrim.filter(m=>(m.statut||'פר"ח')==='פר"ח').length;
+  const nbSakhar=metgabrim.filter(m=>m.statut==='שכר').length;
+  const tauxCouverture=nbT>0?Math.round(nbActif/nbT*100):0;
+
+  // Stats par matière
+  const statsParMatiere=MATIERES.map(mat=>{
+    const mM=metgabrim.filter(m=>(m.matieres||[]).includes(mat));
+    const mT=talmidim.filter(t=>(t.matieres||[]).includes(mat));
+    const mActif=mT.filter(t=>(t.affectations||[]).filter(a=>a.actif!==false).some(a=>{
+      const m2=metgabrim.find(x=>x.id===a.metgaberId);
+      const c=m2&&(m2.creneaux||[])[a.creneauIdx];
+      return c&&c.matiere===mat;
+    }));
+    const creneauxLibres=mM.reduce((s,m)=>s+(m.creneaux||[]).filter(c=>c.matiere===mat&&(!c.eleves||!c.eleves.length)).length,0);
+    const creneauxPris=mM.reduce((s,m)=>s+(m.creneaux||[]).filter(c=>c.matiere===mat&&c.eleves&&c.eleves.length).length,0);
+    const alerte=mT.length-mActif.length>creneauxLibres;
+    return {mat,nbM:mM.length,nbT:mT.length,nbActif:mActif.length,nbAttente:mT.length-mActif.length,creneauxLibres,creneauxPris,alerte};
+  });
+
+  const statColor=(v,seuil)=>v>=seuil?'#16a34a':v>0?'#ea580c':'#dc2626';
+
+  el.innerHTML=`
+    <p class="section-title">📊 סטטיסטיקות בזמן אמת</p>
+
+    <!-- Cartes globales -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem;">
+      ${[
+        {label:'מתגברים',val:nbM,icon:'👤',bg:'#eff6ff',color:'#1e40af'},
+        {label:'תלמידים',val:nbT,icon:'🎓',bg:'#f0fdf4',color:'#166534'},
+        {label:'פעילים',val:nbActif,icon:'✅',bg:'#dcfce7',color:'#166534'},
+        {label:'ממתינים',val:nbAttente,icon:'⏳',bg:'#fff7ed',color:'#c2410c'},
+        {label:'פר"ח',val:nbParach,icon:'🎒',bg:'#ede9fe',color:'#5b21b6'},
+        {label:'שכר',val:nbSakhar,icon:'💼',bg:'#fef9c3',color:'#854d0e'},
+      ].map(s=>`
+        <div style="background:${s.bg};border-radius:16px;padding:1.25rem;text-align:center;">
+          <div style="font-size:28px;">${s.icon}</div>
+          <div style="font-size:32px;font-weight:800;color:${s.color};line-height:1.2;">${s.val}</div>
+          <div style="font-size:13px;color:#666;margin-top:4px;">${s.label}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Barre de couverture -->
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:700;font-size:15px;">שיעור כיסוי כללי</span>
+        <span style="font-size:22px;font-weight:800;color:${tauxCouverture>=80?'#16a34a':tauxCouverture>=50?'#ea580c':'#dc2626'};">${tauxCouverture}%</span>
+      </div>
+      <div style="background:#e5e7eb;border-radius:20px;height:12px;overflow:hidden;">
+        <div style="background:${tauxCouverture>=80?'#16a34a':tauxCouverture>=50?'#ea580c':'#dc2626'};width:${tauxCouverture}%;height:100%;border-radius:20px;transition:width 0.5s;"></div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">${nbActif} מתוך ${nbT} תלמידים מכוסים</div>
+    </div>
+
+    <!-- Stats par matière -->
+    <p class="section-title">לפי מקצוע</p>
+    ${statsParMatiere.map(s=>`
+      <div class="card" style="margin-bottom:10px;border-right:4px solid ${s.alerte?'#dc2626':'#2563eb'};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="font-weight:700;font-size:15px;">${s.mat}</div>
+          ${s.alerte?`<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">⚠️ מחסור במתגברים</span>`:`<span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">✓ מצב תקין</span>`}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;">
+          <div style="background:#eff6ff;border-radius:10px;padding:8px;">
+            <div style="font-size:20px;font-weight:700;color:#1e40af;">${s.nbM}</div>
+            <div style="font-size:11px;color:#666;">מתגברים</div>
+          </div>
+          <div style="background:#f0fdf4;border-radius:10px;padding:8px;">
+            <div style="font-size:20px;font-weight:700;color:#166534;">${s.creneauxLibres}</div>
+            <div style="font-size:11px;color:#666;">משבצות פנויות</div>
+          </div>
+          <div style="background:#fff7ed;border-radius:10px;padding:8px;">
+            <div style="font-size:20px;font-weight:700;color:#c2410c;">${s.nbAttente}</div>
+            <div style="font-size:11px;color:#666;">ממתינים</div>
+          </div>
+          <div style="background:#dcfce7;border-radius:10px;padding:8px;">
+            <div style="font-size:20px;font-weight:700;color:#166534;">${s.nbActif}</div>
+            <div style="font-size:11px;color:#666;">פעילים</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;background:#e5e7eb;border-radius:20px;height:8px;overflow:hidden;">
+          <div style="background:${s.nbT>0&&s.nbActif/s.nbT>=0.8?'#16a34a':s.nbT>0&&s.nbActif/s.nbT>=0.5?'#ea580c':'#dc2626'};width:${s.nbT>0?Math.round(s.nbActif/s.nbT*100):0}%;height:100%;border-radius:20px;"></div>
+        </div>
+      </div>`).join('')}
+
+    <div style="text-align:center;margin-top:1rem;">
+      <button class="btn btn-sm" onclick="loadAll().then(renderStats)" style="background:#eff6ff;color:#1e40af;">🔄 רענן נתונים</button>
+    </div>
+  `;
+}
+
+// ---- Export/Import ----
 function exporterDonnees(){
   const data={metgabrim:getM(),talmidim:getT(),date:new Date().toLocaleDateString('he-IL')};
   const a=document.createElement('a');
@@ -460,37 +577,45 @@ function removeTCreneau(i){tCreneauxTemp.splice(i,1);renderTCreneauxTemp();}
 // ---- Sauvegarder מתגבר ----
 function setStatutM(s){
   document.getElementById('m-statut').value=s;
-  document.getElementById('btn-parach').style.background=s==='פרח'?'#1e40af':'';
-  document.getElementById('btn-parach').style.color=s==='פרח'?'#fff':'';
-  document.getElementById('btn-sakhir').style.background=s==='שכיר'?'#1e40af':'';
-  document.getElementById('btn-sakhir').style.color=s==='שכיר'?'#fff':'';
+  document.getElementById('btn-parach').style.background=s==='פר"ח'?'#1e40af':'';
+  document.getElementById('btn-parach').style.color=s==='פר"ח'?'#fff':'';
+  document.getElementById('btn-sakhir').style.background=s==='שכר'?'#1e40af':'';
+  document.getElementById('btn-sakhir').style.color=s==='שכר'?'#fff':'';
 }
 
 async function sauvegarderMetgaber(){
   const nom=document.getElementById('m-nom').value.trim(),tel=document.getElementById('m-tel').value.trim();
-  const statut=document.getElementById('m-statut').value||'פרח';
+  const statut=document.getElementById('m-statut').value||'פר"ח';
+  const note=document.getElementById('m-note').value.trim();
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!mCreneauxTemp.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
-  const newM={id:crypto.randomUUID(),nom,tel,statut,matieres:[...new Set(mCreneauxTemp.map(c=>c.matiere))],creneaux:mCreneauxTemp.map(c=>({...c,eleves:[]})),created_at:new Date().toISOString()};
+  const newM={id:crypto.randomUUID(),nom,tel,statut,note,matieres:[...new Set(mCreneauxTemp.map(c=>c.matiere))],creneaux:mCreneauxTemp.map(c=>({...c,eleves:[]})),created_at:new Date().toISOString()};
   document.getElementById('m-nom').value='';document.getElementById('m-tel').value='';
+  document.getElementById('m-note').value='';
   document.getElementById('m-debut').value='08:00';document.getElementById('m-fin').value='10:00';
-  setStatutM('פרח');
+  setStatutM('פר"ח');
   mCreneauxTemp=[];renderMCreneauxTemp();
   await upsertM(newM);
 }
 
 // ---- Render מתגברים ----
 function renderMetgabrim(){
-  let data=getM();if(triM)data=[...data].sort(hebrewSort);
+  let data=getM();
+  if(triM)data=[...data].sort(hebrewSort);
+  const filtre=document.getElementById('filtre-matiere-m')?.value||'';
+  if(filtre)data=data.filter(m=>(m.matieres||[]).includes(filtre));
   const el=document.getElementById('liste-metgabrim');
   if(!data.length){el.innerHTML='<div class="empty">אין מתגברים עדיין.</div>';return;}
   el.innerHTML=data.map(m=>`
     <div class="card card-blue">
       <div class="row-header">
         <div style="flex:1;">
-          <div class="name-link" onclick="ouvrirFicheM('${m.id}')">${m.nom}</div>
-          <span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${m.statut==='שכיר'?'#fef9c3':'#ede9fe'};color:${m.statut==='שכיר'?'#854d0e':'#5b21b6'};margin-top:3px;">${m.statut||'פרח'}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="name-link" onclick="ouvrirFicheM('${m.id}')">${m.nom}</div>
+            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${(m.statut||'פר"ח')==='שכר'?'#fef9c3':'#ede9fe'};color:${(m.statut||'פר"ח')==='שכר'?'#854d0e':'#5b21b6'};">${m.statut||'פר"ח'}</span>
+          </div>
           ${m.tel?`<div class="phone-badge">📞 ${m.tel}</div>`:''}
+          ${m.note?`<div style="font-size:12px;color:#888;margin-top:3px;font-style:italic;">📝 ${m.note}</div>`:''}
           <div style="margin:4px 0;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
           <div style="margin-top:6px;">${(m.creneaux||[]).length?(m.creneaux||[]).map((c,ci)=>`
             <span class="creneau-tag${c.eleves&&c.eleves.length?' creneau-tag-pris':''}">
@@ -505,7 +630,6 @@ function renderMetgabrim(){
         </div>
       </div>
     </div>`).join('');
-}
 
 async function removeCreneauM(mId,ci){
   const m=getM().find(x=>x.id===mId);if(!m)return;
@@ -642,11 +766,13 @@ async function sauvegarderEditM(){
 // ---- Sauvegarder תלמיד ----
 async function sauvegarderTalmid(){
   const nom=document.getElementById('t-nom').value.trim(),tel=document.getElementById('t-tel').value.trim();
+  const note=document.getElementById('t-note').value.trim();
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!tCreneauxTemp.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
   const newId=crypto.randomUUID();
-  const newT={id:newId,nom,tel,matieres:[...new Set(tCreneauxTemp.map(c=>c.matiere))],disponibilites:[...tCreneauxTemp],affectations:[],created_at:new Date().toISOString()};
+  const newT={id:newId,nom,tel,note,matieres:[...new Set(tCreneauxTemp.map(c=>c.matiere))],disponibilites:[...tCreneauxTemp],affectations:[],created_at:new Date().toISOString()};
   document.getElementById('t-nom').value='';document.getElementById('t-tel').value='';
+  document.getElementById('t-note').value='';
   document.getElementById('t-debut').value='08:00';document.getElementById('t-fin').value='10:00';
   tCreneauxTemp=[];renderTCreneauxTemp();
   await upsertT(newT);
@@ -725,6 +851,7 @@ function renderTalmidim(){
         <div style="flex:1;">
           <div style="font-weight:700;font-size:15px;">${t.nom} ${actif?'<span class="badge-actif">פעיל</span>':'<span class="badge-attente">ממתין</span>'}</div>
           ${t.tel?`<div class="phone-badge">📞 ${t.tel}</div>`:''}
+          ${t.note?`<div style="font-size:12px;color:#888;margin-top:3px;font-style:italic;">📝 ${t.note}</div>`:''}
           <div style="margin:4px 0;">${(t.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
           ${t.disponibilites&&t.disponibilites.length?`<div style="font-size:12px;color:#888;margin-top:2px;">זמינויות: ${t.disponibilites.map(c=>`${c.jour} ${c.debut}–${c.fin} (${c.matiere||''})`).join(' | ')}</div>`:''}
           ${affDetails.length?`<div style="margin-top:6px;">${affDetails.join('')}</div>`:''}
@@ -963,6 +1090,7 @@ function hadsefRecap(){
 
 // ---- Init ----
 renderSMatieres();
+}
 </script>
 </body>
 </html>
