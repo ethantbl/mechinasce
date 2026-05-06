@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>מכינה SCE — ניהול מתגברים</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; color: #1a1a2e; min-height: 100vh; direction: rtl; }
+.topbar { background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 1rem 1.5rem; }
+.topbar h1 { font-size: 20px; font-weight: 700; color: #fff; }
+.container { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+.tabs { display: flex; gap: 5px; margin-bottom: 1.5rem; background: #fff; border-radius: 14px; padding: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); flex-wrap: wrap; }
+.tab { padding: 8px 16px; border: none; border-radius: 10px; background: transparent; cursor: pointer; font-size: 13px; color: #666; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 500; }
+.tab:hover { background: #eff6ff; color: #1e40af; }
+.tab.active { background: #1e40af; color: #fff; font-weight: 600; }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: #fff; border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.card-blue { border-right: 4px solid #2563eb; }
+.card-green { border-right: 4px solid #16a34a; }
+.card-orange { border-right: 4px solid #ea580c; }
+.section-title { font-size: 17px; font-weight: 700; margin-bottom: 1rem; color: #1a1a2e; }
+label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; margin-top: 12px; font-weight: 500; }
+input[type=text], input[type=tel], input[type=time], input[type=number], input[type=password], select {
+  width: 100%; padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 14px; background: #f9fafb; color: #1a1a2e; outline: none;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+input[type=text], input[type=tel], input[type=password] { direction: rtl; text-align: right; }
+input[type=time], input[type=number] { direction: ltr; text-align: left; }
+select { direction: rtl; text-align: right; }
+input:focus, select:focus { border-color: #2563eb; background: #fff; }
+.creneau-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-direction: row-reverse; }
+.creneau-row select { width: auto; flex: 1; min-width: 100px; }
+.creneau-row input[type=time] { width: auto; flex: 1; min-width: 85px; }
+.btn { padding: 9px 18px; border: none; border-radius: 10px; background: #f1f5f9; cursor: pointer; font-size: 13px; color: #374151; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 500; }
+.btn:hover { background: #e2e8f0; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #1e40af; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-danger { background: #fee2e2; color: #991b1b; }
+.btn-danger:hover { background: #fecaca; }
+.btn-success { background: #dcfce7; color: #166534; }
+.btn-success:hover { background: #bbf7d0; }
+.btn-sm { font-size: 12px; padding: 5px 12px; }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; background: #eff6ff; color: #1d4ed8; margin: 2px; font-weight: 500; }
+.creneau-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; background: #eff6ff; color: #1d4ed8; margin: 2px; direction: ltr; font-weight: 500; }
+.creneau-tag-pris { background: #fee2e2; color: #991b1b; }
+.remove-c { cursor: pointer; font-size: 14px; color: #dc2626; background: none; border: none; padding: 0 2px; line-height: 1; }
+.empty { color: #aaa; font-size: 14px; text-align: center; padding: 3rem 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+.creneau-form { background: #f8fafc; border-radius: 12px; padding: 14px; margin-top: 8px; border: 1.5px dashed #e2e8f0; }
+.phone-badge { font-size: 13px; color: #888; margin-top: 3px; }
+.row-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; flex-direction: row-reverse; }
+.sep { font-size: 13px; color: #aaa; }
+.name-link { cursor: pointer; color: #1e40af; font-weight: 700; font-size: 15px; }
+.name-link:hover { text-decoration: underline; }
+.badge-attente { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #fff7ed; color: #c2410c; font-weight: 600; margin-right: 6px; }
+.badge-actif { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #dcfce7; color: #166534; font-weight: 600; margin-right: 6px; }
+.modal-backdrop { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,23,42,0.55); z-index: 1000; overflow-y: auto; padding: 2rem 1rem; }
+.modal-box { background: #fff; border-radius: 20px; padding: 1.75rem; width: 100%; max-width: 540px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+.modal-box-wide { background: #fff; border-radius: 20px; padding: 1.75rem; width: 100%; max-width: 900px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+.dialog-box { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 360px; margin: 5rem auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center; }
+.timetable { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 12px; }
+.timetable th { background: #eff6ff; padding: 9px 4px; text-align: center; border: 1px solid #dbeafe; font-weight: 700; font-size: 12px; color: #1e40af; }
+.timetable td { border: 1px solid #f1f5f9; padding: 3px; text-align: center; height: 38px; vertical-align: middle; min-width: 90px; }
+.timetable .time-col { background: #f8fafc; font-size: 11px; color: #aaa; font-weight: 600; width: 55px; direction: ltr; min-width: 55px; }
+.slot-libre { background: #dcfce7; color: #166534; border-radius: 6px; padding: 4px 5px; font-size: 10px; font-weight: 700; display: block; }
+.slot-pris { background: #fee2e2; color: #991b1b; border-radius: 6px; padding: 3px 5px; font-size: 10px; font-weight: 600; display: block; }
+.matiere-label { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; background: #eff6ff; color: #1d4ed8; margin-top: 2px; }
+.login-box { max-width: 360px; margin: 5rem auto; background: #fff; border-radius: 20px; padding: 2rem; box-shadow: 0 8px 30px rgba(0,0,0,0.1); text-align: center; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-left: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen" style="min-height:100vh;background:#eef2f7;display:flex;align-items:center;justify-content:center;">
+  <div class="login-box">
+    <div style="font-size:48px;margin-bottom:10px;">🎓</div>
+    <h2 style="color:#1e3a8a;margin-bottom:6px;font-size:22px;">מכינה SCE</h2>
+    <p style="color:#888;font-size:14px;margin-bottom:1.5rem;">ניהול מתגברים</p>
+    <label>סיסמה</label>
+    <input type="password" id="login-pass" placeholder="הזן סיסמה..." onkeydown="if(event.key==='Enter')login()" />
+    <div style="margin-top:14px;">
+      <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="login()">כניסה</button>
+    </div>
+    <div id="login-error" style="color:#dc2626;font-size:13px;margin-top:10px;display:none;">סיסמה שגויה</div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app-screen" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <h1>🎓 מכינה SCE — ניהול מתגברים</h1>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <div id="stats-bar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <div id="sync-status" style="font-size:11px;color:rgba(255,255,255,0.8);"></div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div style="margin-bottom:1rem;">
+      <input type="text" id="search-global" placeholder="🔍 חיפוש מהיר — שם מתגבר או תלמיד..." oninput="rechercheRapide()" style="background:#fff;border-radius:12px;padding:10px 16px;font-size:14px;" />
+      <div id="search-results"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('metgabrim',event)">מתגברים</button>
+      <button class="tab" onclick="showTab('talmidim',event)">תלמידים</button>
+      <button class="tab" onclick="showTab('shiduch',event)">שידוך</button>
+      <button class="tab" onclick="showTab('recap',event)">דוח חודשי</button>
+      <button class="tab" onclick="showTab('gibuy',event)">גיבוי</button>
+    </div>
+
+    <!-- מתגברים -->
+    <div id="tab-metgabrim" class="section active">
+      <p class="section-title">הוספת מתגבר חדש</p>
+      <div class="card">
+        <div class="grid2">
+          <div><label>שם המתגבר</label><input type="text" id="m-nom" placeholder="לדוגמה: אתן לוי" /></div>
+          <div><label>טלפון</label><input type="tel" id="m-tel" placeholder="050-1234567" /></div>
+        </div>
+        <label style="margin-top:14px;">זמינויות (יום + שעות + מקצוע)</label>
+        <div class="creneau-form">
+          <div class="creneau-row">
+            <button class="btn btn-sm" onclick="ajouterCreneauM()">+ הוסף</button>
+            <select id="m-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
+            <input type="time" id="m-fin" value="10:00" />
+            <span class="sep">עד</span>
+            <input type="time" id="m-debut" value="08:00" />
+            <select id="m-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+          </div>
+          <div id="m-creneaux-temp" style="margin-top:8px;"></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary" onclick="sauvegarderMetgaber()">שמור מתגבר</button></div>
+      </div>
+      <p class="section-title" style="margin-top:1.5rem;">מתגברים רשומים</p>
+      <div style="margin-bottom:12px;"><button class="btn btn-sm" id="btn-tri-m" onclick="toggleTriM()">א-ב ↕</button></div>
+      <div id="liste-metgabrim"><div class="empty">טוען נתונים...</div></div>
+    </div>
+
+    <!-- תלמידים -->
+    <div id="tab-talmidim" class="section">
+      <p class="section-title">הוספת תלמיד חדש</p>
+      <div class="card">
+        <div class="grid2">
+          <div><label>שם התלמיד</label><input type="text" id="t-nom" placeholder="לדוגמה: דוד כהן" /></div>
+          <div><label>טלפון</label><input type="tel" id="t-tel" placeholder="050-9876543" /></div>
+        </div>
+        <label style="margin-top:14px;">זמינויות ומקצועות</label>
+        <div class="creneau-form">
+          <div class="creneau-row">
+            <button class="btn btn-sm" onclick="ajouterCreneauT()">+ הוסף</button>
+            <select id="t-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
+            <input type="time" id="t-fin" value="10:00" />
+            <span class="sep">עד</span>
+            <input type="time" id="t-debut" value="08:00" />
+            <select id="t-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+          </div>
+          <div id="t-creneaux-temp" style="margin-top:8px;"></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary" onclick="sauvegarderTalmid()">שמור תלמיד</button></div>
+      </div>
+      <p class="section-title" style="margin-top:1.5rem;">תלמידים רשומים</p>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-direction:row-reverse;align-items:center;">
+        <button class="btn btn-sm" id="filtre-tous" onclick="filtrerTalmidim('tous')" style="background:#1e40af;color:#fff;">הכל</button>
+        <button class="btn btn-sm" id="filtre-attente" onclick="filtrerTalmidim('attente')">ממתינים</button>
+        <button class="btn btn-sm" id="filtre-actif" onclick="filtrerTalmidim('actif')">פעילים</button>
+        <button class="btn btn-sm" id="btn-tri-t" onclick="toggleTriT()" style="margin-right:auto;">א-ב ↕</button>
+      </div>
+      <div id="liste-talmidim"><div class="empty">טוען נתונים...</div></div>
+    </div>
+
+    <!-- שידוך -->
+    <div id="tab-shiduch" class="section">
+      <p class="section-title">שידוך ידני</p>
+      <div class="card">
+        <label>מקצוע</label>
+        <div id="s-matieres-chips" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;flex-direction:row-reverse;"></div>
+        <div style="margin-top:12px;"><label>יום</label>
+          <select id="s-jour" style="max-width:200px;"><option value="">כל הימים</option><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:flex-end;gap:10px;flex-direction:row-reverse;flex-wrap:wrap;">
+          <div style="flex:1;min-width:120px;"><label>שעת התחלה</label><input type="time" id="s-debut" /></div>
+          <div style="flex:1;min-width:120px;"><label>שעת סיום</label><input type="time" id="s-fin" /></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary" onclick="rechercherShiduch()">חפש</button></div>
+      </div>
+      <div id="resultats-shiduch"></div>
+    </div>
+
+    <!-- דוח -->
+    <div id="tab-recap" class="section">
+      <p class="section-title">דוח חודשי (15 עד 15)</p>
+      <div class="card">
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-direction:row-reverse;flex-wrap:wrap;">
+          <div style="flex:1;min-width:150px;"><label>חודש</label>
+            <select id="recap-mois">
+              <option value="01">ינואר</option><option value="02">פברואר</option><option value="03">מרץ</option>
+              <option value="04">אפריל</option><option value="05">מאי</option><option value="06">יוני</option>
+              <option value="07">יולי</option><option value="08">אוגוסט</option><option value="09">ספטמבר</option>
+              <option value="10">אוקטובר</option><option value="11">נובמבר</option><option value="12">דצמבר</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:100px;"><label>שנה</label><input type="number" id="recap-annee" value="2026" min="2020" max="2040" style="max-width:120px;" /></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="genererRecap()">הצג דוח</button>
+            <button class="btn btn-success" onclick="exporterExcel()">📊 ייצא Excel</button>
+            <button class="btn" style="background:#f1f5f9;" onclick="hadsefRecap()">🖨️ הדפס</button>
+          </div>
+        </div>
+      </div>
+      <div id="recap-content"></div>
+    </div>
+  </div>
+    <!-- גיבוי -->
+    <div id="tab-gibuy" class="section">
+      <p class="section-title">גיבוי נתונים</p>
+      <div class="card">
+        <p style="font-size:14px;color:#666;margin-bottom:14px;">ייצא את כל הנתונים לקובץ גיבוי על המחשב.</p>
+        <button class="btn btn-success" onclick="exporterDonnees()">📥 ייצא גיבוי JSON</button>
+      </div>
+    </div>
+    © 2026 מכינה SCE — כל הזכויות שמורות | Powered by Ethan Touboul
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://mumnvwieuipdnilhmmen.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11bW52d2lldWlwZG5pbGhtbWVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTIxNTMsImV4cCI6MjA5MzU2ODE1M30.0TuPCEZLEb75Vo3nPh0RjLnAA4T2KbPIQw1YW7FwU3U';
+const PASSWORD='sigalit';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const MATIERES=["מתמטיקה","מבוא לפיזיקה 1","מבוא לפיזיקה 2","גוף קשיח"];
+const JOURS=['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
+const HEURES=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+let cachedM=[],cachedT=[],mCreneauxTemp=[],tCreneauxTemp=[],sSelectedMatiere=null,filtreTalmidim='tous',triM=false,triT=false;
+
+// ---- Login ----
+function login(){
+  const pass=document.getElementById('login-pass').value;
+  if(pass===PASSWORD){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    loadAll();
+  } else {
+    document.getElementById('login-error').style.display='block';
+  }
+}
+
+// ---- Sync ----
+function setSyncing(){document.getElementById('sync-status').innerHTML='<span class="spinner"></span>';}
+function setSynced(){document.getElementById('sync-status').innerHTML='✓ מסונכרן';setTimeout(()=>{document.getElementById('sync-status').innerHTML='';},2000);}
+function setSyncError(msg){document.getElementById('sync-status').innerHTML='⚠️ שגיאה';console.error(msg);}
+
+// ---- Data ----
+async function loadAll(){
+  setSyncing();
+  try {
+    const [rm,rt]=await Promise.all([
+      sb.from('metgabrim').select('*').order('created_at'),
+      sb.from('talmidim').select('*').order('created_at')
+    ]);
+    if(rm.error||rt.error) throw rm.error||rt.error;
+    cachedM=(rm.data||[]).map(m=>({...m,creneaux:m.creneaux||[],matieres:m.matieres||[]}));
+    cachedT=(rt.data||[]).map(t=>({...t,disponibilites:t.disponibilites||[],affectations:(t.affectations||[]).map(a=>({actif:true,...a}))}));
+    setSynced(); updateStats(); renderMetgabrim(); renderTalmidim();
+  } catch(e){setSyncError(e);}
+}
+function getM(){return cachedM;}
+function getT(){return cachedT;}
+async function upsertM(m){
+  setSyncing();
+  const {error}=await sb.from('metgabrim').upsert({id:m.id,nom:m.nom,tel:m.tel||'',matieres:m.matieres,creneaux:m.creneaux,created_at:m.created_at||new Date().toISOString()});
+  if(error){setSyncError(error);return false;}
+  setSynced(); await loadAll(); return true;
+}
+async function removeM(id){
+  setSyncing();
+  await sb.from('metgabrim').delete().eq('id',id);
+  setSynced(); await loadAll();
+}
+async function upsertT(t){
+  setSyncing();
+  const {error}=await sb.from('talmidim').upsert({id:t.id,nom:t.nom,tel:t.tel||'',matieres:t.matieres,disponibilites:t.disponibilites,affectations:t.affectations,created_at:t.created_at||new Date().toISOString()});
+  if(error){setSyncError(error);return false;}
+  setSynced(); await loadAll(); return true;
+}
+async function removeT(id){
+  setSyncing();
+  await sb.from('talmidim').delete().eq('id',id);
+  setSynced(); await loadAll();
+}
+
+// ---- Dialogs ----
+function showConfirm(msg,onOk){
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='dialog-bd';bd.style.zIndex='2000';
+  bd.innerHTML=`<div class="dialog-box"><p style="font-size:15px;font-weight:600;margin-bottom:1.25rem;">${msg}</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-danger" id="d-ok">אישור</button>
+      <button class="btn" id="d-cancel">ביטול</button>
+    </div></div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault();});
+  document.getElementById('d-ok').onclick=()=>{bd.remove();onOk();};
+  document.getElementById('d-cancel').onclick=()=>bd.remove();
+  setTimeout(()=>{const b=document.getElementById('d-cancel');if(b)b.focus();},50);
+}
+function showAlert(msg,cb){
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='alert-bd';bd.style.zIndex='2000';
+  bd.innerHTML=`<div class="dialog-box"><p style="font-size:14px;margin-bottom:1.25rem;">${msg}</p>
+    <button class="btn btn-primary" id="a-ok">אישור</button></div>`;
+  document.body.appendChild(bd);
+  document.getElementById('a-ok').onclick=()=>{bd.remove();if(cb)cb();};
+}
+function openModal(html,wide){
+  closeModal();
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='modal-bd';
+  bd.innerHTML=`<div class="${wide?'modal-box-wide':'modal-box'}">${html}</div>`;
+  bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
+  document.body.appendChild(bd);
+}
+function closeModal(){const el=document.getElementById('modal-bd');if(el)el.remove();}
+
+// ---- Tabs ----
+function showTab(t,e){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(e&&e.target)e.target.classList.add('active');
+  if(t==='metgabrim'){updateStats();renderMetgabrim();}
+  if(t==='talmidim'){updateStats();renderTalmidim();}
+  if(t==='shiduch'){renderSMatieres();document.getElementById('resultats-shiduch').innerHTML='';}
+  if(t==='recap'){const n=new Date();document.getElementById('recap-mois').value=String(n.getMonth()+1).padStart(2,'0');document.getElementById('recap-annee').value=n.getFullYear();genererRecap();}
+  if(t==='gibuy'){}
+}
+
+function exporterDonnees(){
+  const data={metgabrim:getM(),talmidim:getT(),date:new Date().toLocaleDateString('he-IL')};
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download='mechina_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  showAlert('הגיבוי הורד בהצלחה!');
+}
+
+// ---- Stats ----
+function updateStats(){
+  const m=getM(),t=getT();
+  const nb=t.filter(x=>!estActifT(x)).length,nba=t.filter(x=>estActifT(x)).length;
+  document.getElementById('stats-bar').innerHTML=`
+    <span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${m.length} מתגברים</span>
+    <span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${t.length} תלמידים</span>
+    <span style="background:rgba(255,200,0,0.3);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${nb} ממתינים</span>
+    <span style="background:rgba(0,255,100,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${nba} פעילים</span>`;
+}
+
+// ---- Recherche ----
+function rechercheRapide(){
+  const q=document.getElementById('search-global').value.trim().toLowerCase();
+  const el=document.getElementById('search-results');
+  if(!q){el.innerHTML='';return;}
+  const rM=getM().filter(m=>m.nom.toLowerCase().includes(q));
+  const rT=getT().filter(t=>t.nom.toLowerCase().includes(q));
+  if(!rM.length&&!rT.length){el.innerHTML='<div style="font-size:13px;color:#aaa;padding:8px 0;">לא נמצאו תוצאות</div>';return;}
+  el.innerHTML=`<div style="background:#fff;border-radius:12px;padding:10px;margin-top:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    ${rM.map(m=>`<div style="padding:8px 12px;cursor:pointer;border-radius:8px;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''"
+      onclick="ouvrirFicheM('${m.id}');document.getElementById('search-global').value='';document.getElementById('search-results').innerHTML='';">
+      <span style="font-weight:600;">👤 ${m.nom}</span> <span style="font-size:12px;color:#888;">${(m.matieres||[]).join(', ')}</span></div>`).join('')}
+    ${rT.map(t=>`<div style="padding:8px 12px;cursor:pointer;border-radius:8px;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''"
+      onclick="showTab('talmidim',null);document.getElementById('search-global').value='';document.getElementById('search-results').innerHTML='';">
+      <span style="font-weight:600;">🎓 ${t.nom}</span> <span style="font-size:12px;color:#888;">${(t.matieres||[]).join(', ')}</span></div>`).join('')}
+  </div>`;
+}
+
+// ---- Helpers ----
+function estActifT(t){
+  const aff=(t.affectations||[]).filter(a=>a.actif!==false);
+  if(!t.disponibilites||!t.disponibilites.length)return aff.length>0;
+  return t.disponibilites.every(d=>{
+    if(!d.matiere)return aff.length>0;
+    return aff.some(a=>{const m=getM().find(x=>x.id===a.metgaberId);const c=m&&(m.creneaux||[])[a.creneauIdx];return c&&c.matiere===d.matiere&&c.jour===d.jour;});
+  });
+}
+function hebrewSort(a,b){return a.nom.localeCompare(b.nom,'he');}
+function toggleTriM(){triM=!triM;const b=document.getElementById('btn-tri-m');b.style.background=triM?'#1e40af':'';b.style.color=triM?'#fff':'';renderMetgabrim();}
+function toggleTriT(){triT=!triT;const b=document.getElementById('btn-tri-t');b.style.background=triT?'#1e40af':'';b.style.color=triT?'#fff':'';renderTalmidim();}
+function renderSMatieres(){
+  document.getElementById('s-matieres-chips').innerHTML=['הכל',...MATIERES].map(m=>{
+    const sel=(m==='הכל'&&!sSelectedMatiere)||sSelectedMatiere===m;
+    return `<button style="padding:7px 16px;border-radius:20px;font-size:13px;border:1.5px solid ${sel?'#1e40af':'#e5e7eb'};cursor:pointer;background:${sel?'#1e40af':'#fff'};color:${sel?'#fff':'#666'};font-family:inherit;" onclick="selectSM('${m}')">${m}</button>`;
+  }).join('');
+}
+function selectSM(m){sSelectedMatiere=m==='הכל'?null:m;renderSMatieres();}
+
+// ---- Créneaux מתגבר ----
+function ajouterCreneauM(){
+  const j=document.getElementById('m-jour').value,d=document.getElementById('m-debut').value,f=document.getElementById('m-fin').value,mat=document.getElementById('m-matiere').value;
+  if(!d||!f)return; mCreneauxTemp.push({jour:j,debut:d,fin:f,matiere:mat,eleves:[]}); renderMCreneauxTemp();
+}
+function renderMCreneauxTemp(){
+  document.getElementById('m-creneaux-temp').innerHTML=mCreneauxTemp.map((c,i)=>
+    `<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;opacity:0.8;">${c.matiere}</span><button class="remove-c" onclick="removeMCreneau(${i})">×</button></span>`).join('');
+}
+function removeMCreneau(i){mCreneauxTemp.splice(i,1);renderMCreneauxTemp();}
+
+// ---- Créneaux תלמיד ----
+function ajouterCreneauT(){
+  const j=document.getElementById('t-jour').value,d=document.getElementById('t-debut').value,f=document.getElementById('t-fin').value,mat=document.getElementById('t-matiere').value;
+  if(!d||!f)return; tCreneauxTemp.push({jour:j,debut:d,fin:f,matiere:mat}); renderTCreneauxTemp();
+}
+function renderTCreneauxTemp(){
+  document.getElementById('t-creneaux-temp').innerHTML=tCreneauxTemp.map((c,i)=>
+    `<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;opacity:0.8;">${c.matiere}</span><button class="remove-c" onclick="removeTCreneau(${i})">×</button></span>`).join('');
+}
+function removeTCreneau(i){tCreneauxTemp.splice(i,1);renderTCreneauxTemp();}
+
+// ---- Sauvegarder מתגבר ----
+async function sauvegarderMetgaber(){
+  const nom=document.getElementById('m-nom').value.trim(),tel=document.getElementById('m-tel').value.trim();
+  if(!nom){showAlert('נא למלא שם.');return;}
+  if(!mCreneauxTemp.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
+  const newM={id:crypto.randomUUID(),nom,tel,matieres:[...new Set(mCreneauxTemp.map(c=>c.matiere))],creneaux:mCreneauxTemp.map(c=>({...c,eleves:[]})),created_at:new Date().toISOString()};
+  document.getElementById('m-nom').value='';document.getElementById('m-tel').value='';
+  document.getElementById('m-debut').value='08:00';document.getElementById('m-fin').value='10:00';
+  mCreneauxTemp=[];renderMCreneauxTemp();
+  await upsertM(newM);
+}
+
+// ---- Render מתגברים ----
+function renderMetgabrim(){
+  let data=getM();if(triM)data=[...data].sort(hebrewSort);
+  const el=document.getElementById('liste-metgabrim');
+  if(!data.length){el.innerHTML='<div class="empty">אין מתגברים עדיין.</div>';return;}
+  el.innerHTML=data.map(m=>`
+    <div class="card card-blue">
+      <div class="row-header">
+        <div style="flex:1;">
+          <div class="name-link" onclick="ouvrirFicheM('${m.id}')">${m.nom}</div>
+          ${m.tel?`<div class="phone-badge">📞 ${m.tel}</div>`:''}
+          <div style="margin:4px 0;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+          <div style="margin-top:6px;">${(m.creneaux||[]).length?(m.creneaux||[]).map((c,ci)=>`
+            <span class="creneau-tag${c.eleves&&c.eleves.length?' creneau-tag-pris':''}">
+              ${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;opacity:0.8;">${c.matiere||''}</span>
+              ${c.eleves&&c.eleves.length?`<span style="font-size:10px;">(${c.eleves.length})</span>`:''}
+              <button class="remove-c" onclick="removeCreneauM('${m.id}',${ci})">×</button>
+            </span>`).join(''):'<span style="font-size:12px;color:#aaa;">אין זמינויות</span>'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn btn-sm" onclick="ouvrirEditM('${m.id}')">ערוך</button>
+          <button class="btn btn-danger btn-sm" onclick="supprimerM('${m.id}')">מחק</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function removeCreneauM(mId,ci){
+  const m=getM().find(x=>x.id===mId);if(!m)return;
+  const c=(m.creneaux||[])[ci];
+  const talmidim=getT();
+  for(const t of talmidim){
+    let changed=false;
+    if(c&&c.eleves&&c.eleves.includes(t.id)){
+      t.affectations=(t.affectations||[]).filter(a=>!(a.metgaberId===mId&&a.creneauIdx===ci));
+      changed=true;
+    }
+    t.affectations=(t.affectations||[]).map(a=>{if(a.metgaberId===mId&&a.creneauIdx>ci){changed=true;return{...a,creneauIdx:a.creneauIdx-1};}return a;});
+    if(changed)await upsertT(t);
+  }
+  m.creneaux.splice(ci,1);
+  m.matieres=[...new Set(m.creneaux.map(c=>c.matiere))];
+  await upsertM(m);
+}
+
+async function supprimerM(id){
+  showConfirm('למחוק את המתגבר הזה?',async()=>{
+    for(const t of getT()){
+      const before=t.affectations.length;
+      t.affectations=(t.affectations||[]).filter(a=>a.metgaberId!==id);
+      if(t.affectations.length!==before)await upsertT(t);
+    }
+    await removeM(id);
+  });
+}
+
+// ---- Fiche ----
+function ouvrirFicheM(mId){
+  const m=getM().find(x=>x.id===mId);if(!m)return;
+  const talmidim=getT();
+  let tbl='<div style="overflow-x:auto;"><table class="timetable"><thead><tr><th class="time-col">שעה</th>';
+  JOURS.forEach(j=>{tbl+=`<th>${j}</th>`;});
+  tbl+='</tr></thead><tbody>';
+  HEURES.forEach((h,hi)=>{
+    const fin=HEURES[hi+1];if(!fin)return;
+    tbl+=`<tr><td class="time-col">${h}</td>`;
+    JOURS.forEach(jour=>{
+      const c=(m.creneaux||[]).find(x=>x.jour===jour&&x.debut<=h&&x.fin>=fin);
+      if(c&&c.eleves&&c.eleves.length){
+        const noms=c.eleves.map(eId=>{const t=talmidim.find(x=>x.id===eId);return t?t.nom:'?';}).join(', ');
+        tbl+=`<td><span class="slot-pris">${noms}<br><span class="matiere-label">${c.matiere||''}</span></span></td>`;
+      } else if(c){tbl+=`<td><span class="slot-libre">פנוי<br><span class="matiere-label">${c.matiere||''}</span></span></td>`;
+      } else{tbl+=`<td></td>`;}
+    });
+    tbl+='</tr>';
+  });
+  tbl+='</tbody></table></div>';
+  openModal(`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:12px;">
+    <div><div style="font-size:20px;font-weight:700;">${m.nom}</div>
+      ${m.tel?`<div style="font-size:13px;color:#888;">📞 ${m.tel}</div>`:''}
+      <div style="margin-top:6px;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+    </div><button class="btn btn-sm" onclick="closeModal()">✕ סגור</button></div>${tbl}`,true);
+}
+
+// ---- Edit מתגבר ----
+let editMId=null,editMCreneaux=[];
+function ouvrirEditM(id){
+  editMId=id;const m=getM().find(x=>x.id===id);if(!m)return;
+  editMCreneaux=(m.creneaux||[]).map(c=>({...c,eleves:[...(c.eleves||[])]}));
+  openModal(`<p class="section-title" style="margin-bottom:1rem;">עריכת מתגבר</p>
+    <div class="grid2">
+      <div><label>שם</label><input type="text" id="em-nom" value="${m.nom}" /></div>
+      <div><label>טלפון</label><input type="tel" id="em-tel" value="${m.tel||''}" /></div>
+    </div>
+    <label style="margin-top:12px;">הוסף זמינות</label>
+    <div class="creneau-form" style="margin-top:6px;">
+      <div class="creneau-row">
+        <button class="btn btn-sm" onclick="ajouterCreneauEM()">+ הוסף</button>
+        <select id="em-matiere" style="min-width:130px;">${MATIERES.map(x=>`<option>${x}</option>`).join('')}</select>
+        <input type="time" id="em-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="em-debut" value="08:00" />
+        <select id="em-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+      </div>
+      <div id="em-creneaux" style="margin-top:8px;"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="sauvegarderEditM()">שמור</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
+  renderEMCreneaux();
+}
+function ajouterCreneauEM(){
+  const j=document.getElementById('em-jour').value,d=document.getElementById('em-debut').value,f=document.getElementById('em-fin').value,mat=document.getElementById('em-matiere').value;
+  if(!d||!f)return;editMCreneaux.push({jour:j,debut:d,fin:f,matiere:mat,eleves:[]});renderEMCreneaux();
+}
+function renderEMCreneaux(){
+  const el=document.getElementById('em-creneaux');if(!el)return;
+  el.innerHTML=editMCreneaux.map((c,i)=>`<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;">${c.matiere}</span><button class="remove-c" onclick="removeEMCreneau(${i})">×</button></span>`).join('');
+}
+function removeEMCreneau(i){editMCreneaux.splice(i,1);renderEMCreneaux();}
+async function sauvegarderEditM(){
+  if(!editMId)return;
+  const nom=document.getElementById('em-nom').value.trim(),tel=document.getElementById('em-tel').value.trim();
+  if(!nom){showAlert('נא למלא שם.');return;}
+  if(!editMCreneaux.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
+  const m=getM().find(x=>x.id===editMId);if(!m)return;
+  m.nom=nom;m.tel=tel;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
+  closeModal();await upsertM(m);
+}
+
+// ---- Sauvegarder תלמיד ----
+async function sauvegarderTalmid(){
+  const nom=document.getElementById('t-nom').value.trim(),tel=document.getElementById('t-tel').value.trim();
+  if(!nom){showAlert('נא למלא שם.');return;}
+  if(!tCreneauxTemp.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
+  const newId=crypto.randomUUID();
+  const newT={id:newId,nom,tel,matieres:[...new Set(tCreneauxTemp.map(c=>c.matiere))],disponibilites:[...tCreneauxTemp],affectations:[],created_at:new Date().toISOString()};
+  document.getElementById('t-nom').value='';document.getElementById('t-tel').value='';
+  document.getElementById('t-debut').value='08:00';document.getElementById('t-fin').value='10:00';
+  tCreneauxTemp=[];renderTCreneauxTemp();
+  await upsertT(newT);
+  afficherCompatibles(newId);
+}
+
+// ---- Compatibles ----
+function afficherCompatibles(talmidId){
+  const t=getT().find(x=>x.id===talmidId);if(!t)return;
+  const covered=new Set((t.affectations||[]).filter(a=>a.actif!==false).map(a=>{const m=getM().find(x=>x.id===a.metgaberId);const c=m&&(m.creneaux||[])[a.creneauIdx];return c?c.matiere:null;}).filter(Boolean));
+  const compat=[];
+  getM().forEach(m=>{
+    (m.creneaux||[]).forEach((c,ci)=>{
+      if(!(t.matieres||[]).includes(c.matiere))return;
+      if(covered.has(c.matiere))return;
+      if((t.affectations||[]).some(a=>a.metgaberId===m.id&&a.creneauIdx===ci&&a.actif!==false))return;
+      const ok=!t.disponibilites||!t.disponibilites.length||t.disponibilites.some(td=>td.matiere===c.matiere&&td.jour===c.jour&&td.debut<=c.debut&&td.fin>=c.fin);
+      if(ok)compat.push({m,c,ci});
+    });
+  });
+  openModal(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <p class="section-title" style="margin:0;color:#166534;">✓ ${t.nom} נשמר!</p>
+    <button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <p style="font-size:14px;color:#666;margin-bottom:1rem;">מתגברים זמינים מתאימים:</p>
+    ${compat.length?compat.map(r=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:12px;margin-bottom:8px;gap:12px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;">${r.m.nom}</div>
+          ${r.m.tel?`<div style="font-size:12px;color:#888;">📞 ${r.m.tel}</div>`:''}
+          <span class="creneau-tag" style="margin-top:4px;">${r.c.jour} ${r.c.debut}–${r.c.fin}</span>
+          <span class="tag" style="margin-top:4px;">${r.c.matiere}</span>
+          ${r.c.eleves&&r.c.eleves.length?`<span style="font-size:12px;color:#ea580c;font-weight:600;margin-right:4px;">● ${r.c.eleves.length} תלמיד${r.c.eleves.length>1?'ים':''} כרגע</span>`:`<span style="font-size:12px;color:#16a34a;font-weight:600;margin-right:4px;">● פנוי</span>`}
+        </div>
+        <button class="btn btn-success btn-sm" onclick="affecterDepuisTalmid('${r.m.id}',${r.ci},'${talmidId}')">שדך ✓</button>
+      </div>`).join(''):`<div style="text-align:center;color:#aaa;padding:1.5rem;background:#f8fafc;border-radius:12px;">אין מתגברים זמינים כרגע<br><span style="font-size:12px;">התלמיד נשמר ברשימת הממתינים</span></div>`}
+    <div class="btn-row"><button class="btn" onclick="closeModal()">סגור</button></div>`);
+}
+
+async function affecterDepuisTalmid(mId,ci,tId){
+  const m=getM().find(x=>x.id===mId),t=getT().find(x=>x.id===tId);if(!m||!t)return;
+  if(!(m.creneaux||[])[ci].eleves)m.creneaux[ci].eleves=[];
+  if(!m.creneaux[ci].eleves.includes(tId))m.creneaux[ci].eleves.push(tId);
+  if(!(t.affectations||[]).some(a=>a.metgaberId===mId&&a.creneauIdx===ci&&a.actif!==false))
+    t.affectations.push({metgaberId:mId,creneauIdx:ci,dateAffectation:new Date().toLocaleDateString('he-IL'),dateAffectationTimestamp:Date.now(),actif:true});
+  closeModal();await upsertM(m);await upsertT(t);
+  showAlert(`${t.nom} שודך בהצלחה עם ${m.nom}!`,()=>renderTalmidim());
+}
+
+// ---- Render תלמידים ----
+function filtrerTalmidim(f){
+  filtreTalmidim=f;
+  ['tous','attente','actif'].forEach(x=>{const b=document.getElementById('filtre-'+x);b.style.background=x===f?'#1e40af':'';b.style.color=x===f?'#fff':'';});
+  renderTalmidim();
+}
+function renderTalmidim(){
+  let data=getT();
+  let filtres=data;
+  if(filtreTalmidim==='attente')filtres=data.filter(t=>!estActifT(t));
+  if(filtreTalmidim==='actif')filtres=data.filter(t=>estActifT(t));
+  if(triT)filtres=[...filtres].sort(hebrewSort);
+  const el=document.getElementById('liste-talmidim');
+  if(!filtres.length){el.innerHTML='<div class="empty">אין תלמידים.</div>';return;}
+  el.innerHTML=filtres.map(t=>{
+    const actif=estActifT(t);
+    const affDetails=(t.affectations||[]).filter(a=>a.actif!==false).map((a,ai)=>{
+      const m=getM().find(x=>x.id===a.metgaberId),c=m&&(m.creneaux||[])[a.creneauIdx];
+      if(!m||!c)return '';
+      const realIdx=(t.affectations||[]).indexOf(a);
+      return `<div style="display:flex;align-items:center;gap:6px;margin:3px 0;">
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:#fee2e2;color:#991b1b;">✓ ${m.nom} — ${c.jour} ${c.debut}–${c.fin} (${c.matiere||''})</span>
+        <button class="btn btn-sm" style="font-size:11px;padding:2px 8px;background:#fff7ed;color:#c2410c;" onclick="dissocier('${t.id}',${realIdx})">נתק</button>
+      </div>`;
+    }).filter(Boolean);
+    return `<div class="card ${actif?'card-green':'card-orange'}">
+      <div class="row-header">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;">${t.nom} ${actif?'<span class="badge-actif">פעיל</span>':'<span class="badge-attente">ממתין</span>'}</div>
+          ${t.tel?`<div class="phone-badge">📞 ${t.tel}</div>`:''}
+          <div style="margin:4px 0;">${(t.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+          ${t.disponibilites&&t.disponibilites.length?`<div style="font-size:12px;color:#888;margin-top:2px;">זמינויות: ${t.disponibilites.map(c=>`${c.jour} ${c.debut}–${c.fin} (${c.matiere||''})`).join(' | ')}</div>`:''}
+          ${affDetails.length?`<div style="margin-top:6px;">${affDetails.join('')}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn btn-sm" onclick="ouvrirEditT('${t.id}')">ערוך</button>
+          <button class="btn btn-sm" style="background:#eff6ff;color:#1e40af;" onclick="afficherCompatibles('${t.id}')">🔍 חפש מתגבר</button>
+          <button class="btn btn-danger btn-sm" onclick="supprimerT('${t.id}')">מחק</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function dissocier(tId,affIdx){
+  showConfirm('לנתק שידוך זה?',async()=>{
+    const t=getT().find(x=>x.id===tId);if(!t||!t.affectations[affIdx])return;
+    const a=t.affectations[affIdx];
+    a.dateFin=new Date().toLocaleDateString('he-IL');a.dateFinTimestamp=Date.now();a.actif=false;
+    const m=getM().find(x=>x.id===a.metgaberId);
+    if(m&&(m.creneaux||[])[a.creneauIdx]){
+      m.creneaux[a.creneauIdx].eleves=(m.creneaux[a.creneauIdx].eleves||[]).filter(eId=>eId!==tId);
+      await upsertM(m);
+    }
+    await upsertT(t);
+  });
+}
+
+async function supprimerT(id){
+  showConfirm('למחוק את התלמיד?',async()=>{
+    const t=getT().find(x=>x.id===id);
+    if(t&&t.affectations){
+      for(const a of t.affectations){
+        const m=getM().find(x=>x.id===a.metgaberId);
+        if(m&&(m.creneaux||[])[a.creneauIdx]){
+          m.creneaux[a.creneauIdx].eleves=(m.creneaux[a.creneauIdx].eleves||[]).filter(eId=>eId!==id);
+          await upsertM(m);
+        }
+      }
+    }
+    await removeT(id);
+  });
+}
+
+// ---- Edit תלמיד ----
+let editTId=null,editTDispos=[];
+function ouvrirEditT(id){
+  editTId=id;const t=getT().find(x=>x.id===id);if(!t)return;
+  editTDispos=[...(t.disponibilites||[]).map(c=>({...c}))];
+  openModal(`<p class="section-title" style="margin-bottom:1rem;">עריכת תלמיד</p>
+    <div class="grid2">
+      <div><label>שם</label><input type="text" id="et-nom" value="${t.nom}" /></div>
+      <div><label>טלפון</label><input type="tel" id="et-tel" value="${t.tel||''}" /></div>
+    </div>
+    <label style="margin-top:12px;">זמינויות ומקצועות</label>
+    <div class="creneau-form" style="margin-top:6px;">
+      <div class="creneau-row">
+        <button class="btn btn-sm" onclick="ajouterCreneauET()">+ הוסף</button>
+        <select id="et-matiere" style="min-width:130px;">${MATIERES.map(x=>`<option>${x}</option>`).join('')}</select>
+        <input type="time" id="et-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="et-debut" value="08:00" />
+        <select id="et-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+      </div>
+      <div id="et-dispos" style="margin-top:8px;"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="sauvegarderEditT()">שמור</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
+  renderETDispos();
+}
+function ajouterCreneauET(){
+  const j=document.getElementById('et-jour').value,d=document.getElementById('et-debut').value,f=document.getElementById('et-fin').value,mat=document.getElementById('et-matiere').value;
+  if(!d||!f)return;editTDispos.push({jour:j,debut:d,fin:f,matiere:mat});renderETDispos();
+}
+function renderETDispos(){
+  const el=document.getElementById('et-dispos');if(!el)return;
+  el.innerHTML=editTDispos.map((c,i)=>`<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;opacity:0.8;">${c.matiere||''}</span><button class="remove-c" onclick="removeETDispo(${i})">×</button></span>`).join('');
+}
+function removeETDispo(i){editTDispos.splice(i,1);renderETDispos();}
+async function sauvegarderEditT(){
+  if(!editTId)return;
+  const nom=document.getElementById('et-nom').value.trim(),tel=document.getElementById('et-tel').value.trim();
+  if(!nom){showAlert('נא למלא שם.');return;}
+  const t=getT().find(x=>x.id===editTId);if(!t)return;
+  t.nom=nom;t.tel=tel;t.disponibilites=editTDispos;t.matieres=[...new Set(editTDispos.map(c=>c.matiere).filter(Boolean))];
+  closeModal();await upsertT(t);
+}
+
+// ---- Shiduch ----
+function rechercherShiduch(){
+  const jour=document.getElementById('s-jour').value,debut=document.getElementById('s-debut').value,fin=document.getElementById('s-fin').value;
+  const el=document.getElementById('resultats-shiduch');
+  const res=[];
+  getM().forEach(m=>{
+    (m.creneaux||[]).forEach((c,ci)=>{
+      if(sSelectedMatiere&&c.matiere!==sSelectedMatiere)return;
+      if(jour&&c.jour!==jour)return;
+      if(debut&&c.debut>debut)return;
+      if(fin&&c.fin<fin)return;
+      const compat=getT().filter(t=>{
+        const deja=(t.affectations||[]).filter(a=>a.actif!==false).some(a=>{const m2=getM().find(x=>x.id===a.metgaberId);const c2=m2&&(m2.creneaux||[])[a.creneauIdx];return c2&&c2.matiere===c.matiere;});
+        if(deja)return false;
+        if(!(t.matieres||[]).includes(c.matiere))return false;
+        if(!t.disponibilites||!t.disponibilites.length)return true;
+        return t.disponibilites.some(d=>d.matiere===c.matiere&&d.jour===c.jour&&d.debut<=c.debut&&d.fin>=c.fin);
+      });
+      res.push({m,c,ci,compat});
+    });
+  });
+  if(!res.length){el.innerHTML='<div class="empty">לא נמצאו מתגברים זמינים.</div>';return;}
+  el.innerHTML=res.map(r=>`<div class="card card-blue">
+    <div style="font-weight:700;font-size:15px;">${r.m.nom}</div>
+    <div style="margin:4px 0;">
+      <span class="creneau-tag">${r.c.jour} ${r.c.debut}–${r.c.fin}</span>
+      <span class="tag" style="margin-right:6px;">${r.c.matiere||''}</span>
+      ${r.c.eleves&&r.c.eleves.length?`<span style="font-size:12px;color:#ea580c;font-weight:600;">● ${r.c.eleves.length} תלמיד${r.c.eleves.length>1?'ים':''} כרגע</span>`:`<span style="font-size:12px;color:#16a34a;font-weight:600;">● פנוי</span>`}
+    </div>
+    ${r.compat.length?`<div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
+      <div style="font-size:13px;color:#888;margin-bottom:8px;">תלמידים ממתינים מתאימים:</div>
+      ${r.compat.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+        <div><strong>${t.nom}</strong>${t.tel?` — 📞 ${t.tel}`:''}</div>
+        <button class="btn btn-success btn-sm" onclick="affecter('${r.m.id}',${r.ci},'${t.id}')">שדך ✓</button>
+      </div>`).join('')}`:''}
+    <div style="margin-top:10px;"><button class="btn btn-sm" style="background:#fff7ed;color:#c2410c;" onclick="ouvrirAffectationManuelle('${r.m.id}',${r.ci})">+ שידוך ידני</button></div>
+  </div>`).join('');
+}
+
+async function affecter(mId,ci,tId){
+  const m=getM().find(x=>x.id===mId),t=getT().find(x=>x.id===tId);if(!m||!t)return;
+  if(!(m.creneaux||[])[ci].eleves)m.creneaux[ci].eleves=[];
+  if(!m.creneaux[ci].eleves.includes(tId))m.creneaux[ci].eleves.push(tId);
+  if(!(t.affectations||[]).some(a=>a.metgaberId===mId&&a.creneauIdx===ci&&a.actif!==false))
+    t.affectations.push({metgaberId:mId,creneauIdx:ci,dateAffectation:new Date().toLocaleDateString('he-IL'),dateAffectationTimestamp:Date.now(),actif:true});
+  await upsertM(m);await upsertT(t);
+  showAlert(`${t.nom} שודך בהצלחה עם ${m.nom}!`,()=>rechercherShiduch());
+}
+
+function ouvrirAffectationManuelle(mId,ci){
+  const m=getM().find(x=>x.id===mId),c=m&&(m.creneaux||[])[ci];
+  const talmidim=getT().filter(t=>{
+    const deja=(t.affectations||[]).filter(a=>a.actif!==false).some(a=>{const m2=getM().find(x=>x.id===a.metgaberId);const c2=m2&&(m2.creneaux||[])[a.creneauIdx];return c2&&c&&c2.matiere===c.matiere;});
+    return !deja;
+  });
+  if(!talmidim.length){showAlert('אין תלמידים ממתינים מתאימים.');return;}
+  openModal(`<p class="section-title" style="margin-bottom:1rem;">שידוך ידני</p>
+    <label>בחר תלמיד</label>
+    <select id="manuel-talmid" style="margin-top:6px;">${talmidim.map(t=>`<option value="${t.id}">${t.nom}${t.tel?' — '+t.tel:''}</option>`).join('')}</select>
+    <div class="btn-row"><button class="btn btn-primary" onclick="affecterManuel('${mId}',${ci})">שדך</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
+}
+function affecterManuel(mId,ci){const tId=document.getElementById('manuel-talmid').value;closeModal();affecter(mId,ci,tId);}
+
+// ---- Rapport ----
+function compterJours(jour,d1,d2){
+  const idx=JOURS.indexOf(jour);let n=0;const d=new Date(d1);
+  while(d<=d2){if(d.getDay()===idx)n++;d.setDate(d.getDate()+1);}return n;
+}
+function calcRows(d1,d2){
+  const parM={};
+  getM().forEach(m=>{
+    (m.creneaux||[]).forEach((c,ci)=>{
+      (c.eleves||[]).forEach(eId=>{
+        const t=getT().find(x=>x.id===eId);if(!t)return;
+        const aff=(t.affectations||[]).find(a=>a.metgaberId===m.id&&a.creneauIdx===ci&&a.actif!==false);if(!aff)return;
+        const da=aff.dateAffectationTimestamp?new Date(aff.dateAffectationTimestamp):null;
+        if(da&&da>d2)return;
+        const de=da&&da>d1?da:d1;
+        const nb=compterJours(c.jour,de,d2);
+        if(nb>0){if(!parM[m.id])parM[m.id]={m,rows:[]};parM[m.id].rows.push({t,c,nb,done:false});}
+      });
+    });
+  });
+  getT().forEach(t=>{
+    (t.affectations||[]).forEach(a=>{
+      if(a.actif!==false)return;if(!a.dateFinTimestamp)return;
+      const df=new Date(a.dateFinTimestamp),da=a.dateAffectationTimestamp?new Date(a.dateAffectationTimestamp):null;
+      if(da&&da>d2)return;if(df<d1)return;
+      const m=getM().find(x=>x.id===a.metgaberId);if(!m||(m.creneaux||[]).length<=a.creneauIdx)return;
+      const c=(m.creneaux||[])[a.creneauIdx];if(!c)return;
+      const de=da&&da>d1?da:d1,fe=df<d2?df:d2;
+      const nb=compterJours(c.jour,de,fe);
+      if(nb>0){if(!parM[m.id])parM[m.id]={m,rows:[]};parM[m.id].rows.push({t,c,nb,done:true});}
+    });
+  });
+  return parM;
+}
+function genererRecap(){
+  const mois=document.getElementById('recap-mois').value,annee=parseInt(document.getElementById('recap-annee').value);
+  let mp=parseInt(mois)-1,ap=annee;if(mp===0){mp=12;ap--;}
+  const d1=new Date(ap,mp-1,15),d2=new Date(annee,parseInt(mois)-1,15);
+  const parM=calcRows(d1,d2);
+  let html=`<div style="margin-bottom:1rem;padding:10px 14px;background:#eff6ff;border-radius:10px;font-size:13px;color:#1e40af;"><strong>תקופה:</strong> ${d1.toLocaleDateString('he-IL')} עד ${d2.toLocaleDateString('he-IL')}</div>`;
+  let total=0;
+  Object.values(parM).forEach(({m,rows})=>{
+    const tm=rows.reduce((s,r)=>s+r.nb,0);total+=tm;
+    html+=`<div class="card card-blue">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:16px;">👤 ${m.nom}</div>
+        <div style="font-size:13px;color:#1e40af;font-weight:600;">סה"כ: ${tm} שיעורים</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead>
+        <tr style="background:#eff6ff;">
+          <th style="padding:8px;text-align:right;border:1px solid #dbeafe;">תלמיד</th>
+          <th style="padding:8px;text-align:right;border:1px solid #dbeafe;">טלפון</th>
+          <th style="padding:8px;text-align:center;border:1px solid #dbeafe;">מקצוע</th>
+          <th style="padding:8px;text-align:center;border:1px solid #dbeafe;direction:ltr;">יום ושעה</th>
+          <th style="padding:8px;text-align:center;border:1px solid #dbeafe;">שיעורים</th>
+        </tr></thead><tbody>
+        ${rows.map(r=>`<tr${r.done?' style="opacity:0.6;"':''}>
+          <td style="padding:7px 10px;border:1px solid #f1f5f9;">${r.t.nom}${r.done?' <span style="font-size:10px;color:#aaa;">(סיים)</span>':''}</td>
+          <td style="padding:7px 10px;border:1px solid #f1f5f9;color:#888;">${r.t.tel||'—'}</td>
+          <td style="padding:7px 10px;border:1px solid #f1f5f9;text-align:center;">${r.c.matiere||'—'}</td>
+          <td style="padding:7px 10px;border:1px solid #f1f5f9;text-align:center;direction:ltr;">${r.c.jour} ${r.c.debut}–${r.c.fin}</td>
+          <td style="padding:7px 10px;border:1px solid #f1f5f9;text-align:center;font-weight:700;color:#1e40af;">${r.nb}</td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  });
+  if(!Object.keys(parM).length)html+='<div class="empty">אין שידוכים פעילים לתקופה זו.</div>';
+  else html+=`<div style="text-align:center;padding:12px;background:#1e3a8a;border-radius:12px;color:#fff;font-weight:700;font-size:16px;margin-top:8px;">סה"כ כללי: ${total} שיעורים</div>`;
+  document.getElementById('recap-content').innerHTML=html;
+}
+function exporterExcel(){
+  const mois=document.getElementById('recap-mois').value,annee=parseInt(document.getElementById('recap-annee').value);
+  let mp=parseInt(mois)-1,ap=annee;if(mp===0){mp=12;ap--;}
+  const parM=calcRows(new Date(ap,mp-1,15),new Date(annee,parseInt(mois)-1,15));
+  if(!Object.keys(parM).length){showAlert('אין נתונים לייצוא.');return;}
+  const MOIS={'01':'ינואר','02':'פברואר','03':'מרץ','04':'אפריל','05':'מאי','06':'יוני','07':'יולי','08':'אוגוסט','09':'ספטמבר','10':'אוקטובר','11':'נובמבר','12':'דצמבר'};
+  let csv='\uFEFF'+'מתגבר,תלמיד,טלפון,מקצוע,יום ושעה,מספר שיעורים\n';
+  Object.values(parM).forEach(({m,rows})=>{rows.forEach(r=>{csv+=`"${m.nom}","${r.t.nom}","${r.t.tel||''}","${r.c.matiere||''}","${r.c.jour} ${r.c.debut}-${r.c.fin}","${r.nb}"\n`;});});
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`mechina_doch_${MOIS[mois]}_${annee}.csv`;a.click();
+}
+function hadsefRecap(){
+  const content=document.getElementById('recap-content').innerHTML;
+  if(!content){showAlert('נא להציג דוח תחילה.');return;}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial;direction:rtl;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:8px;text-align:right;}th{background:#eff6ff;}.card{margin-bottom:16px;padding:12px;border:1px solid #dbeafe;border-radius:8px;}</style></head><body>${content}</body></html>`);
+  w.document.close();w.focus();setTimeout(()=>{w.print();w.close();},500);
+}
+
+// ---- Init ----
+renderSMatieres();
+</script>
+</body>
+</html>
