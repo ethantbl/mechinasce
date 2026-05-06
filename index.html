@@ -547,21 +547,38 @@ function ouvrirFicheM(mId){
     const fin=HEURES[hi+1];if(!fin)return;
     tbl+=`<tr><td class="time-col">${h}</td>`;
     JOURS.forEach(jour=>{
-      const c=(m.creneaux||[]).find(x=>x.jour===jour&&x.debut<=h&&x.fin>=fin);
-      if(c&&c.eleves&&c.eleves.length){
-        const noms=c.eleves.map(eId=>{const t=talmidim.find(x=>x.id===eId);return t?t.nom:'?';}).join(', ');
-        tbl+=`<td><span class="slot-pris">${noms}<br><span class="matiere-label">${c.matiere||''}</span></span></td>`;
-      } else if(c){tbl+=`<td><span class="slot-libre">פנוי<br><span class="matiere-label">${c.matiere||''}</span></span></td>`;
-      } else{tbl+=`<td></td>`;}
+      // Trouver TOUS les créneaux qui correspondent à ce jour/heure
+      const creneaux=(m.creneaux||[]).filter(x=>x.jour===jour&&x.debut<=h&&x.fin>=fin);
+      if(creneaux.length>0){
+        const cellContent=creneaux.map(c=>{
+          if(c.eleves&&c.eleves.length){
+            const noms=c.eleves.map(eId=>{const t=talmidim.find(x=>x.id===eId);return t?t.nom:'?';}).join(', ');
+            return `<span class="slot-pris">${noms}<br><span class="matiere-label">${c.matiere||''}</span></span>`;
+          } else {
+            return `<span class="slot-libre">פנוי<br><span class="matiere-label">${c.matiere||''}</span></span>`;
+          }
+        }).join('<div style="height:3px;"></div>');
+        tbl+=`<td>${cellContent}</td>`;
+      } else {
+        tbl+=`<td></td>`;
+      }
     });
     tbl+='</tr>';
   });
   tbl+='</tbody></table></div>';
   openModal(`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:12px;">
-    <div><div style="font-size:20px;font-weight:700;">${m.nom}</div>
+    <div>
+      <div style="font-size:20px;font-weight:700;">${m.nom}</div>
+      <span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${(m.statut||'פרח')==='שכיר'?'#fef9c3':'#ede9fe'};color:${(m.statut||'פרח')==='שכיר'?'#854d0e':'#5b21b6'};margin:4px 0;">${m.statut||'פרח'}</span>
       ${m.tel?`<div style="font-size:13px;color:#888;">📞 ${m.tel}</div>`:''}
       <div style="margin-top:6px;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
-    </div><button class="btn btn-sm" onclick="closeModal()">✕ סגור</button></div>${tbl}`,true);
+    </div>
+    <button class="btn btn-sm" onclick="closeModal()">✕ סגור</button>
+  </div>${tbl}
+  <div style="margin-top:12px;display:flex;gap:16px;font-size:12px;flex-direction:row-reverse;">
+    <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:14px;height:14px;background:#dcfce7;border-radius:3px;"></span> פנוי</span>
+    <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:14px;height:14px;background:#fee2e2;border-radius:3px;"></span> תפוס</span>
+  </div>`,true);
 }
 
 // ---- Edit מתגבר ----
