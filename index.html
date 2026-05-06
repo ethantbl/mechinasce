@@ -126,6 +126,14 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
           <div><label>שם המתגבר</label><input type="text" id="m-nom" placeholder="לדוגמה: אתן לוי" /></div>
           <div><label>טלפון</label><input type="tel" id="m-tel" placeholder="050-1234567" /></div>
         </div>
+        <div style="margin-top:12px;">
+          <label>סוג</label>
+          <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
+            <button id="btn-parach" class="btn btn-sm" style="background:#1e40af;color:#fff;border-radius:20px;" onclick="setStatutM('פרח')">פרח</button>
+            <button id="btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutM('שכיר')">שכיר</button>
+          </div>
+          <input type="hidden" id="m-statut" value="פרח" />
+        </div>
         <label style="margin-top:14px;">זמינויות (יום + שעות + מקצוע)</label>
         <div class="creneau-form">
           <div class="creneau-row">
@@ -450,13 +458,23 @@ function renderTCreneauxTemp(){
 function removeTCreneau(i){tCreneauxTemp.splice(i,1);renderTCreneauxTemp();}
 
 // ---- Sauvegarder מתגבר ----
+function setStatutM(s){
+  document.getElementById('m-statut').value=s;
+  document.getElementById('btn-parach').style.background=s==='פרח'?'#1e40af':'';
+  document.getElementById('btn-parach').style.color=s==='פרח'?'#fff':'';
+  document.getElementById('btn-sakhir').style.background=s==='שכיר'?'#1e40af':'';
+  document.getElementById('btn-sakhir').style.color=s==='שכיר'?'#fff':'';
+}
+
 async function sauvegarderMetgaber(){
   const nom=document.getElementById('m-nom').value.trim(),tel=document.getElementById('m-tel').value.trim();
+  const statut=document.getElementById('m-statut').value||'פרח';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!mCreneauxTemp.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
-  const newM={id:crypto.randomUUID(),nom,tel,matieres:[...new Set(mCreneauxTemp.map(c=>c.matiere))],creneaux:mCreneauxTemp.map(c=>({...c,eleves:[]})),created_at:new Date().toISOString()};
+  const newM={id:crypto.randomUUID(),nom,tel,statut,matieres:[...new Set(mCreneauxTemp.map(c=>c.matiere))],creneaux:mCreneauxTemp.map(c=>({...c,eleves:[]})),created_at:new Date().toISOString()};
   document.getElementById('m-nom').value='';document.getElementById('m-tel').value='';
   document.getElementById('m-debut').value='08:00';document.getElementById('m-fin').value='10:00';
+  setStatutM('פרח');
   mCreneauxTemp=[];renderMCreneauxTemp();
   await upsertM(newM);
 }
@@ -471,6 +489,7 @@ function renderMetgabrim(){
       <div class="row-header">
         <div style="flex:1;">
           <div class="name-link" onclick="ouvrirFicheM('${m.id}')">${m.nom}</div>
+          <span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${m.statut==='שכיר'?'#fef9c3':'#ede9fe'};color:${m.statut==='שכיר'?'#854d0e':'#5b21b6'};margin-top:3px;">${m.statut||'פרח'}</span>
           ${m.tel?`<div class="phone-badge">📞 ${m.tel}</div>`:''}
           <div style="margin:4px 0;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
           <div style="margin-top:6px;">${(m.creneaux||[]).length?(m.creneaux||[]).map((c,ci)=>`
@@ -555,6 +574,14 @@ function ouvrirEditM(id){
       <div><label>שם</label><input type="text" id="em-nom" value="${m.nom}" /></div>
       <div><label>טלפון</label><input type="tel" id="em-tel" value="${m.tel||''}" /></div>
     </div>
+    <div style="margin-top:12px;">
+      <label>סוג</label>
+      <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
+        <button id="em-btn-parach" class="btn btn-sm" style="background:${(m.statut||'פרח')==='פרח'?'#1e40af':'transparent'};color:${(m.statut||'פרח')==='פרח'?'#fff':''};border-radius:20px;" onclick="setStatutEM('פרח')">פרח</button>
+        <button id="em-btn-sakhir" class="btn btn-sm" style="background:${m.statut==='שכיר'?'#1e40af':'transparent'};color:${m.statut==='שכיר'?'#fff':''};border-radius:20px;" onclick="setStatutEM('שכיר')">שכיר</button>
+      </div>
+      <input type="hidden" id="em-statut" value="${m.statut||'פרח'}" />
+    </div>
     <label style="margin-top:12px;">הוסף זמינות</label>
     <div class="creneau-form" style="margin-top:6px;">
       <div class="creneau-row">
@@ -577,13 +604,21 @@ function renderEMCreneaux(){
   el.innerHTML=editMCreneaux.map((c,i)=>`<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;">${c.matiere}</span><button class="remove-c" onclick="removeEMCreneau(${i})">×</button></span>`).join('');
 }
 function removeEMCreneau(i){editMCreneaux.splice(i,1);renderEMCreneaux();}
+function setStatutEM(s){
+  document.getElementById('em-statut').value=s;
+  document.getElementById('em-btn-parach').style.background=s==='פרח'?'#1e40af':'';
+  document.getElementById('em-btn-parach').style.color=s==='פרח'?'#fff':'';
+  document.getElementById('em-btn-sakhir').style.background=s==='שכיר'?'#1e40af':'';
+  document.getElementById('em-btn-sakhir').style.color=s==='שכיר'?'#fff':'';
+}
 async function sauvegarderEditM(){
   if(!editMId)return;
   const nom=document.getElementById('em-nom').value.trim(),tel=document.getElementById('em-tel').value.trim();
+  const statut=document.getElementById('em-statut').value||'פרח';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!editMCreneaux.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
   const m=getM().find(x=>x.id===editMId);if(!m)return;
-  m.nom=nom;m.tel=tel;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
+  m.nom=nom;m.tel=tel;m.statut=statut;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
   closeModal();await upsertM(m);
 }
 
