@@ -226,6 +226,11 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
         <p style="font-size:14px;color:#666;margin-bottom:14px;">ייצא את כל הנתונים לקובץ גיבוי על המחשב.</p>
         <button class="btn btn-success" onclick="exporterDonnees()">📥 ייצא גיבוי JSON</button>
       </div>
+      <div class="card" style="margin-top:12px;">
+        <p style="font-size:14px;color:#666;margin-bottom:14px;">ייבא קובץ גיבוי — הנתונים הקיימים יוחלפו!</p>
+        <input type="file" id="import-file" accept=".json" style="margin-bottom:12px;" />
+        <button class="btn btn-primary" onclick="importerDonnees()">📤 ייבא גיבוי</button>
+      </div>
     </div>
     © 2026 מכינה SCE — כל הזכויות שמורות | Powered by Ethan Touboul
   </div>
@@ -347,6 +352,30 @@ function exporterDonnees(){
   a.download='mechina_backup_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
   showAlert('הגיבוי הורד בהצלחה!');
+}
+
+async function importerDonnees(){
+  const file=document.getElementById('import-file').files[0];
+  if(!file){showAlert('נא לבחור קובץ.');return;}
+  showConfirm('לייבא? הנתונים הקיימים יוחלפו לחלוטין.',async()=>{
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        const d=JSON.parse(e.target.result);
+        if(!d.metgabrim||!d.talmidim){showAlert('קובץ לא תקין.');return;}
+        setSyncing();
+        // Supprimer tout d'abord
+        for(const m of getM()) await sb.from('metgabrim').delete().eq('id',m.id);
+        for(const t of getT()) await sb.from('talmidim').delete().eq('id',t.id);
+        // Réimporter
+        for(const m of d.metgabrim) await sb.from('metgabrim').upsert(m);
+        for(const t of d.talmidim) await sb.from('talmidim').upsert(t);
+        await loadAll();
+        showAlert('יובא בהצלחה!');
+      }catch(e){showAlert('קובץ לא תקין.');}
+    };
+    reader.readAsText(file);
+  });
 }
 
 // ---- Stats ----
