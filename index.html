@@ -790,8 +790,13 @@ function afficherCompatibles(talmidId){
       if(!(t.matieres||[]).includes(c.matiere))return;
       if(covered.has(c.matiere))return;
       if((t.affectations||[]).some(a=>a.metgaberId===m.id&&a.creneauIdx===ci&&a.actif!==false))return;
+      // Vérifier si ce מתגבר est physiquement occupé à ce créneau horaire (même jour+heure, quelle que soit la matière)
+      const physiquementOccupe=(m.creneaux||[]).some((c2,ci2)=>
+        ci2!==ci && c2.jour===c.jour && c2.debut===c.debut && c2.fin===c.fin &&
+        c2.eleves && c2.eleves.length>0
+      );
       const ok=!t.disponibilites||!t.disponibilites.length||t.disponibilites.some(td=>td.matiere===c.matiere&&td.jour===c.jour&&td.debut<=c.debut&&td.fin>=c.fin);
-      if(ok)compat.push({m,c,ci});
+      if(ok) compat.push({m,c,ci,physiquementOccupe});
     });
   });
   openModal(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
@@ -805,7 +810,11 @@ function afficherCompatibles(talmidId){
           ${r.m.tel?`<div style="font-size:12px;color:#888;">📞 ${r.m.tel}</div>`:''}
           <span class="creneau-tag" style="margin-top:4px;">${r.c.jour} ${r.c.debut}–${r.c.fin}</span>
           <span class="tag" style="margin-top:4px;">${r.c.matiere}</span>
-          ${r.c.eleves&&r.c.eleves.length?`<span style="font-size:12px;color:#ea580c;font-weight:600;margin-right:4px;">● ${r.c.eleves.length} תלמיד${r.c.eleves.length>1?'ים':''} כרגע</span>`:`<span style="font-size:12px;color:#16a34a;font-weight:600;margin-right:4px;">● פנוי</span>`}
+          ${r.physiquementOccupe
+            ?`<span style="font-size:12px;color:#dc2626;font-weight:600;margin-right:4px;">⚠️ פיזית תפוס (מקצוע אחר)</span>`
+            :r.c.eleves&&r.c.eleves.length
+              ?`<span style="font-size:12px;color:#ea580c;font-weight:600;margin-right:4px;">● ${r.c.eleves.length} תלמיד${r.c.eleves.length>1?'ים':''} כרגע</span>`
+              :`<span style="font-size:12px;color:#16a34a;font-weight:600;margin-right:4px;">● פנוי</span>`}
         </div>
         <button class="btn btn-success btn-sm" onclick="affecterDepuisTalmid('${r.m.id}',${r.ci},'${talmidId}')">שדך ✓</button>
       </div>`).join(''):`<div style="text-align:center;color:#aaa;padding:1.5rem;background:#f8fafc;border-radius:12px;">אין מתגברים זמינים כרגע<br><span style="font-size:12px;">התלמיד נשמר ברשימת הממתינים</span></div>`}
@@ -949,6 +958,11 @@ function rechercherShiduch(){
       if(jour&&c.jour!==jour)return;
       if(debut&&c.debut>debut)return;
       if(fin&&c.fin<fin)return;
+      // Vérifier si ce מתגבר est physiquement occupé à ce créneau (autre matière même heure)
+      const physiquementOccupe=(m.creneaux||[]).some((c2,ci2)=>
+        ci2!==ci && c2.jour===c.jour && c2.debut===c.debut && c2.fin===c.fin &&
+        c2.eleves && c2.eleves.length>0
+      );
       const compat=getT().filter(t=>{
         const deja=(t.affectations||[]).filter(a=>a.actif!==false).some(a=>{const m2=getM().find(x=>x.id===a.metgaberId);const c2=m2&&(m2.creneaux||[])[a.creneauIdx];return c2&&c2.matiere===c.matiere;});
         if(deja)return false;
@@ -956,24 +970,31 @@ function rechercherShiduch(){
         if(!t.disponibilites||!t.disponibilites.length)return true;
         return t.disponibilites.some(d=>d.matiere===c.matiere&&d.jour===c.jour&&d.debut<=c.debut&&d.fin>=c.fin);
       });
-      res.push({m,c,ci,compat});
+      res.push({m,c,ci,compat,physiquementOccupe});
     });
   });
   if(!res.length){el.innerHTML='<div class="empty">לא נמצאו מתגברים זמינים.</div>';return;}
-  el.innerHTML=res.map(r=>`<div class="card card-blue">
-    <div style="font-weight:700;font-size:15px;">${r.m.nom}</div>
+  el.innerHTML=res.map(r=>`<div class="card card-blue" style="opacity:${r.physiquementOccupe?'0.7':'1'};">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="font-weight:700;font-size:15px;">${r.m.nom}</span>
+      ${r.physiquementOccupe?`<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">⚠️ פיזית תפוס במקצוע אחר</span>`:''}
+    </div>
     <div style="margin:4px 0;">
       <span class="creneau-tag">${r.c.jour} ${r.c.debut}–${r.c.fin}</span>
       <span class="tag" style="margin-right:6px;">${r.c.matiere||''}</span>
-      ${r.c.eleves&&r.c.eleves.length?`<span style="font-size:12px;color:#ea580c;font-weight:600;">● ${r.c.eleves.length} תלמיד${r.c.eleves.length>1?'ים':''} כרגע</span>`:`<span style="font-size:12px;color:#16a34a;font-weight:600;">● פנוי</span>`}
+      ${r.physiquementOccupe
+        ?`<span style="font-size:12px;color:#dc2626;font-weight:600;">⚠️ מלמד מקצוע אחר בשעה זו</span>`
+        :r.c.eleves&&r.c.eleves.length
+          ?`<span style="font-size:12px;color:#ea580c;font-weight:600;">● ${r.c.eleves.length} תלמיד${r.c.eleves.length>1?'ים':''} כרגע</span>`
+          :`<span style="font-size:12px;color:#16a34a;font-weight:600;">● פנוי</span>`}
     </div>
-    ${r.compat.length?`<div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
+    ${!r.physiquementOccupe&&r.compat.length?`<div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
       <div style="font-size:13px;color:#888;margin-bottom:8px;">תלמידים ממתינים מתאימים:</div>
       ${r.compat.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
         <div><strong>${t.nom}</strong>${t.tel?` — 📞 ${t.tel}`:''}</div>
         <button class="btn btn-success btn-sm" onclick="affecter('${r.m.id}',${r.ci},'${t.id}')">שדך ✓</button>
       </div>`).join('')}`:''}
-    <div style="margin-top:10px;"><button class="btn btn-sm" style="background:#fff7ed;color:#c2410c;" onclick="ouvrirAffectationManuelle('${r.m.id}',${r.ci})">+ שידוך ידני</button></div>
+    ${!r.physiquementOccupe?`<div style="margin-top:10px;"><button class="btn btn-sm" style="background:#fff7ed;color:#c2410c;" onclick="ouvrirAffectationManuelle('${r.m.id}',${r.ci})">+ שידוך ידני</button></div>`:''}
   </div>`).join('');
 }
 
