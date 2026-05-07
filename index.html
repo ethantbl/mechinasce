@@ -779,7 +779,7 @@ function afficherCompatibles(talmidId){
         ci2!==ci && c2.jour===c.jour && c2.debut===c.debut && c2.fin===c.fin &&
         c2.eleves && c2.eleves.length>0
       );
-      const ok=!t.disponibilites||!t.disponibilites.length||t.disponibilites.some(td=>td.matiere===c.matiere&&td.jour===c.jour&&td.debut<=c.debut&&td.fin>=c.fin);
+      const ok=!t.disponibilites||!t.disponibilites.length||t.disponibilites.some(td=>td.matiere===c.matiere&&td.jour===c.jour&&td.debut<c.fin&&td.fin>c.debut);
       if(ok) compat.push({m,c,ci,physiquementOccupe});
     });
   });
@@ -939,8 +939,9 @@ function rechercherShiduch(){
     (m.creneaux||[]).forEach((c,ci)=>{
       if(sSelectedMatiere&&c.matiere!==sSelectedMatiere)return;
       if(jour&&c.jour!==jour)return;
-      if(debut&&c.debut>debut)return;
-      if(fin&&c.fin<fin)return;
+      if(debut&&fin&&!(c.debut<fin&&c.fin>debut))return;
+      if(debut&&!fin&&c.fin<=debut)return;
+      if(!debut&&fin&&c.debut>=fin)return;
       // Vérifier si ce מתגבר est physiquement occupé à ce créneau (autre matière même heure)
       const physiquementOccupe=(m.creneaux||[]).some((c2,ci2)=>
         ci2!==ci && c2.jour===c.jour && c2.debut===c.debut && c2.fin===c.fin &&
@@ -951,7 +952,7 @@ function rechercherShiduch(){
         if(deja)return false;
         if(!(t.matieres||[]).includes(c.matiere))return false;
         if(!t.disponibilites||!t.disponibilites.length)return true;
-        return t.disponibilites.some(d=>d.matiere===c.matiere&&d.jour===c.jour&&d.debut<=c.debut&&d.fin>=c.fin);
+        return t.disponibilites.some(d=>d.matiere===c.matiere&&d.jour===c.jour&&d.debut<c.fin&&d.fin>c.debut);
       });
       res.push({m,c,ci,compat,physiquementOccupe});
     });
