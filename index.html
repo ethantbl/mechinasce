@@ -1074,12 +1074,41 @@ function ouvrirAffectationManuelle(mId,ci){
     return !deja;
   });
   if(!talmidim.length){showAlert('אין תלמידים ממתינים מתאימים.');return;}
-  openModal(`<p class="section-title" style="margin-bottom:1rem;">שידוך ידני</p>
+  if(!c){showAlert('שגיאה.');return;}
+
+  // Générer toutes les heures de début possibles (toutes les heures entières dans la plage)
+  const debutsDispos=[];
+  let h=c.debut;
+  while(true){
+    const fin=addTwoHours(h);
+    if(fin>c.fin)break;
+    // Vérifier que ce slot n'est pas déjà pris
+    const pris=getT().some(t=>(t.affectations||[]).some(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci&&a.debutSlot===h));
+    if(!pris)debutsDispos.push({debut:h,fin});
+    // Avancer d'une heure
+    const[hh,mm]=h.split(':').map(Number);
+    const total=hh*60+mm+60;
+    h=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
+    if(h>=c.fin)break;
+  }
+
+  if(!debutsDispos.length){showAlert('אין שעות פנויות.');return;}
+
+  openModal(`<p class="section-title" style="margin-bottom:1rem;">שידוך ידני — ${c.jour} (${c.debut}–${c.fin})</p>
     <label>בחר תלמיד</label>
     <select id="manuel-talmid" style="margin-top:6px;">${talmidim.map(t=>`<option value="${t.id}">${t.nom}${t.tel?' — '+t.tel:''}</option>`).join('')}</select>
+    <label style="margin-top:12px;">בחר שעת התחלה (קורס 2 שעות)</label>
+    <select id="manuel-slot" style="margin-top:6px;">
+      ${debutsDispos.map(s=>`<option value="${s.debut}|${s.fin}">${s.debut} – ${s.fin}</option>`).join('')}
+    </select>
     <div class="btn-row"><button class="btn btn-primary" onclick="affecterManuel('${mId}',${ci})">שדך</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
 }
-function affecterManuel(mId,ci){const tId=document.getElementById('manuel-talmid').value;closeModal();affecter(mId,ci,tId);}
+function affecterManuel(mId,ci){
+  const tId=document.getElementById('manuel-talmid').value;
+  const slotVal=document.getElementById('manuel-slot').value;
+  const[debutSlot,finSlot]=slotVal.split('|');
+  closeModal();affecter(mId,ci,tId,debutSlot,finSlot);
+}
 
 // ---- Rapport ----
 function compterJours(jour,d1,d2){
