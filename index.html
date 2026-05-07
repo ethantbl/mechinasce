@@ -373,8 +373,6 @@ function showTab(t,e){
 function renderStats(){
   const metgabrim=getM(), talmidim=getT();
   const el=document.getElementById('stats-content');
-
-  // Stats globales
   const nbM=metgabrim.length;
   const nbT=talmidim.length;
   const nbActif=talmidim.filter(t=>estActifT(t)).length;
@@ -383,7 +381,6 @@ function renderStats(){
   const nbSakhar=metgabrim.filter(m=>m.statut==='שכר').length;
   const tauxCouverture=nbT>0?Math.round(nbActif/nbT*100):0;
 
-  // Stats par matière
   const statsParMatiere=MATIERES.map(mat=>{
     const mM=metgabrim.filter(m=>(m.matieres||[]).includes(mat));
     const mT=talmidim.filter(t=>(t.matieres||[]).includes(mat));
@@ -393,78 +390,72 @@ function renderStats(){
       return c&&c.matiere===mat;
     }));
     const creneauxLibres=mM.reduce((s,m)=>s+(m.creneaux||[]).filter(c=>c.matiere===mat&&(!c.eleves||!c.eleves.length)).length,0);
-    const creneauxPris=mM.reduce((s,m)=>s+(m.creneaux||[]).filter(c=>c.matiere===mat&&c.eleves&&c.eleves.length).length,0);
     const alerte=mT.length-mActif.length>creneauxLibres;
-    return {mat,nbM:mM.length,nbT:mT.length,nbActif:mActif.length,nbAttente:mT.length-mActif.length,creneauxLibres,creneauxPris,alerte};
-  });
-
-  const statColor=(v,seuil)=>v>=seuil?'#16a34a':v>0?'#ea580c':'#dc2626';
+    const pct=mT.length>0?Math.round(mActif.length/mT.length*100):0;
+    return {mat,nbM:mM.length,nbT:mT.length,nbActif:mActif.length,nbAttente:mT.length-mActif.length,creneauxLibres,alerte,pct};
+  }).filter(s=>s.nbM>0||s.nbT>0);
 
   el.innerHTML=`
-    <p class="section-title">📊 סטטיסטיקות בזמן אמת</p>
+    <div style="padding:0 0 2rem;">
 
-    <!-- Cartes globales -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem;">
-      ${[
-        {label:'מתגברים',val:nbM,icon:'👤',bg:'#eff6ff',color:'#1e40af'},
-        {label:'תלמידים',val:nbT,icon:'🎓',bg:'#f0fdf4',color:'#166534'},
-        {label:'פעילים',val:nbActif,icon:'✅',bg:'#dcfce7',color:'#166534'},
-        {label:'ממתינים',val:nbAttente,icon:'⏳',bg:'#fff7ed',color:'#c2410c'},
-        {label:'פר"ח',val:nbParach,icon:'🎒',bg:'#ede9fe',color:'#5b21b6'},
-        {label:'שכר',val:nbSakhar,icon:'💼',bg:'#fef9c3',color:'#854d0e'},
-      ].map(s=>`
-        <div style="background:${s.bg};border-radius:16px;padding:1.25rem;text-align:center;">
-          <div style="font-size:28px;">${s.icon}</div>
-          <div style="font-size:32px;font-weight:800;color:${s.color};line-height:1.2;">${s.val}</div>
-          <div style="font-size:13px;color:#666;margin-top:4px;">${s.label}</div>
+      <!-- KPI cards -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+        ${[
+          {label:'מתגברים',val:nbM,sub:`${nbParach} פר"ח · ${nbSakhar} שכר`,color:'#1e40af',bg:'#eff6ff'},
+          {label:'תלמידים',val:nbT,sub:`${nbActif} פעילים · ${nbAttente} ממתינים`,color:'#166534',bg:'#f0fdf4'},
+          {label:'כיסוי',val:tauxCouverture+'%',sub:`${nbActif} מתוך ${nbT} מכוסים`,color:tauxCouverture>=80?'#166534':tauxCouverture>=50?'#92400e':'#991b1b',bg:tauxCouverture>=80?'#f0fdf4':tauxCouverture>=50?'#fffbeb':'#fef2f2'},
+        ].map(k=>`
+          <div style="background:${k.bg};border-radius:14px;padding:16px 18px;">
+            <div style="font-size:28px;font-weight:800;color:${k.color};line-height:1;">${k.val}</div>
+            <div style="font-size:13px;font-weight:600;color:${k.color};margin:4px 0 2px;">${k.label}</div>
+            <div style="font-size:11px;color:#888;">${k.sub}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Barre couverture -->
+      <div style="background:#fff;border-radius:14px;padding:16px 18px;margin-bottom:20px;border:1px solid #f1f5f9;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:14px;font-weight:600;color:#374151;">שיעור כיסוי כללי</span>
+          <span style="font-size:20px;font-weight:800;color:${tauxCouverture>=80?'#166534':tauxCouverture>=50?'#92400e':'#991b1b'};">${tauxCouverture}%</span>
+        </div>
+        <div style="background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden;">
+          <div style="background:${tauxCouverture>=80?'#16a34a':tauxCouverture>=50?'#f59e0b':'#ef4444'};width:${tauxCouverture}%;height:100%;border-radius:99px;transition:width 0.6s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Stats par matière -->
+      <div style="font-size:13px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">לפי מקצוע</div>
+      ${statsParMatiere.map(s=>`
+        <div style="background:#fff;border-radius:14px;padding:16px 18px;margin-bottom:10px;border:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:15px;font-weight:700;color:#111;">${s.mat}</span>
+              ${s.alerte
+                ?`<span style="background:#fef2f2;color:#991b1b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">מחסור</span>`
+                :`<span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">תקין</span>`}
+            </div>
+            <span style="font-size:18px;font-weight:800;color:${s.pct>=80?'#166534':s.pct>=50?'#92400e':'#991b1b'};">${s.pct}%</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            ${[
+              {v:s.nbM,l:'מתגברים',c:'#1e40af',bg:'#eff6ff'},
+              {v:s.creneauxLibres,l:'פנויות',c:'#166534',bg:'#f0fdf4'},
+              {v:s.nbAttente,l:'ממתינים',c:'#c2410c',bg:'#fff7ed'},
+              {v:s.nbActif,l:'פעילים',c:'#166534',bg:'#dcfce7'},
+            ].map(x=>`
+              <div style="flex:1;background:${x.bg};border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:18px;font-weight:800;color:${x.c};">${x.v}</div>
+                <div style="font-size:11px;color:#888;margin-top:1px;">${x.l}</div>
+              </div>`).join('')}
+          </div>
+          <div style="background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden;">
+            <div style="background:${s.pct>=80?'#16a34a':s.pct>=50?'#f59e0b':'#ef4444'};width:${s.pct}%;height:100%;border-radius:99px;"></div>
+          </div>
         </div>`).join('')}
-    </div>
 
-    <!-- Barre de couverture -->
-    <div class="card" style="margin-bottom:1.5rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-weight:700;font-size:15px;">שיעור כיסוי כללי</span>
-        <span style="font-size:22px;font-weight:800;color:${tauxCouverture>=80?'#16a34a':tauxCouverture>=50?'#ea580c':'#dc2626'};">${tauxCouverture}%</span>
+      <div style="text-align:center;margin-top:16px;">
+        <button onclick="loadAll().then(renderStats)" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px 18px;font-size:13px;color:#374151;cursor:pointer;">רענן נתונים</button>
       </div>
-      <div style="background:#e5e7eb;border-radius:20px;height:12px;overflow:hidden;">
-        <div style="background:${tauxCouverture>=80?'#16a34a':tauxCouverture>=50?'#ea580c':'#dc2626'};width:${tauxCouverture}%;height:100%;border-radius:20px;transition:width 0.5s;"></div>
-      </div>
-      <div style="font-size:12px;color:#888;margin-top:6px;">${nbActif} מתוך ${nbT} תלמידים מכוסים</div>
-    </div>
-
-    <!-- Stats par matière -->
-    <p class="section-title">לפי מקצוע</p>
-    ${statsParMatiere.map(s=>`
-      <div class="card" style="margin-bottom:10px;border-right:4px solid ${s.alerte?'#dc2626':'#2563eb'};">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-          <div style="font-weight:700;font-size:15px;">${s.mat}</div>
-          ${s.alerte?`<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">⚠️ מחסור במתגברים</span>`:`<span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">✓ מצב תקין</span>`}
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;">
-          <div style="background:#eff6ff;border-radius:10px;padding:8px;">
-            <div style="font-size:20px;font-weight:700;color:#1e40af;">${s.nbM}</div>
-            <div style="font-size:11px;color:#666;">מתגברים</div>
-          </div>
-          <div style="background:#f0fdf4;border-radius:10px;padding:8px;">
-            <div style="font-size:20px;font-weight:700;color:#166534;">${s.creneauxLibres}</div>
-            <div style="font-size:11px;color:#666;">משבצות פנויות</div>
-          </div>
-          <div style="background:#fff7ed;border-radius:10px;padding:8px;">
-            <div style="font-size:20px;font-weight:700;color:#c2410c;">${s.nbAttente}</div>
-            <div style="font-size:11px;color:#666;">ממתינים</div>
-          </div>
-          <div style="background:#dcfce7;border-radius:10px;padding:8px;">
-            <div style="font-size:20px;font-weight:700;color:#166534;">${s.nbActif}</div>
-            <div style="font-size:11px;color:#666;">פעילים</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;background:#e5e7eb;border-radius:20px;height:8px;overflow:hidden;">
-          <div style="background:${s.nbT>0&&s.nbActif/s.nbT>=0.8?'#16a34a':s.nbT>0&&s.nbActif/s.nbT>=0.5?'#ea580c':'#dc2626'};width:${s.nbT>0?Math.round(s.nbActif/s.nbT*100):0}%;height:100%;border-radius:20px;"></div>
-        </div>
-      </div>`).join('')}
-
-    <div style="text-align:center;margin-top:1rem;">
-      <button class="btn btn-sm" onclick="loadAll().then(renderStats)" style="background:#eff6ff;color:#1e40af;">🔄 רענן נתונים</button>
     </div>
   `;
 }
