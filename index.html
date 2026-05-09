@@ -523,12 +523,17 @@ function rechercheRapide(){
 
 // ---- Helpers ----
 function estActifT(t){
-  const aff=(t.affectations||[]).filter(a=>a.actif!==false);
-  if(!t.disponibilites||!t.disponibilites.length)return aff.length>0;
-  return t.disponibilites.every(d=>{
-    if(!d.matiere)return aff.length>0;
-    return aff.some(a=>{const m=getM().find(x=>x.id===a.metgaberId);const c=m&&(m.creneaux||[])[a.creneauIdx];return c&&c.matiere===d.matiere&&c.jour===d.jour;});
-  });
+  const matieres=t.matieres||[];
+  if(!matieres.length)return false;
+  const affActives=(t.affectations||[]).filter(a=>a.actif!==false);
+  // Actif = chaque matière demandée a au moins une affectation active
+  return matieres.every(mat=>
+    affActives.some(a=>{
+      const m=getM().find(x=>x.id===a.metgaberId);
+      const c=m&&(m.creneaux||[])[a.creneauIdx];
+      return c&&c.matiere===mat;
+    })
+  );
 }
 function hebrewSort(a,b){return a.nom.localeCompare(b.nom,'he');}
 function toggleTriM(){triM=!triM;const b=document.getElementById('btn-tri-m');b.style.background=triM?'#1e40af':'';b.style.color=triM?'#fff':'';renderMetgabrim();}
@@ -806,50 +811,58 @@ function genererSlots(debut,fin){
   while(true){const hFin=addTwoHours(h);if(hFin>fin)break;slots.push({debut:h,fin:hFin});h=hFin;}
   return slots;
 }
-function slotsLibresDansCreneau(m,ci){
+function slotsLibresDansCreneau(m,ci,talmidimCache){
   const c=(m.creneaux||[])[ci];if(!c)return [];
+  const talmidim=talmidimCache||getT();
   const tousSlots=genererSlots(c.debut,c.fin);
-  const slotsOccupes=[];
-  getT().forEach(t=>{
-    (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci&&a.debutSlot).forEach(a=>{slotsOccupes.push(a.debutSlot);});
-  });
-  // Vérifier aussi si un autre créneau du même prof occupe ce slot (physiquement)
-  return tousSlots.filter(s=>{
-    if(slotsOccupes.includes(s.debut))return false;
-    // Vérifier occupation physique par autre matière
-    const occupe=(m.creneaux||[]).some((c2,ci2)=>{
-      if(ci2===ci)return false;
-      if(c2.jour!==c.jour)return false;
-      return getT().some(t=>(t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci2&&a.debutSlot).some(a=>a.debutSlot===s.debut));
+  // Slots occupés dans ce créneau
+  const slotsOccupes=new Set();
+  talmidim.forEach(t=>{
+    (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci&&a.debutSlot).forEach(a=>{
+      slotsOccupes.add(a.debutSlot);
     });
-    return !occupe;
   });
+  // Slots occupés physiquement par une autre matière du même prof au même moment
+  const slotsOccupesAutreMatiere=new Set();
+  (m.creneaux||[]).forEach((c2,ci2)=>{
+    if(ci2===ci||c2.jour!==c.jour)return;
+    talmidim.forEach(t=>{
+      (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci2&&a.debutSlot).forEach(a=>{
+        slotsOccupesAutreMatiere.add(a.debutSlot);
+      });
+    });
+  });
+  return tousSlots.filter(s=>!slotsOccupes.has(s.debut)&&!slotsOccupesAutreMatiere.has(s.debut));
 }
 
 // ---- Compatibles ----
 function afficherCompatibles(talmidId){
-  const t=getT().find(x=>x.id===talmidId);if(!t)return;
-  const covered=new Set((t.affectations||[]).filter(a=>a.actif!==false).map(a=>{const m=getM().find(x=>x.id===a.metgaberId);const c=m&&(m.creneaux||[])[a.creneauIdx];return c?c.matiere:null;}).filter(Boolean));
+  const talmidim=getT();
+  const metgabrim=getM();
+  const t=talmidim.find(x=>x.id===talmidId);if(!t)return;
+  const covered=new Set((t.affectations||[]).filter(a=>a.actif!==false).map(a=>{
+    const m=metgabrim.find(x=>x.id===a.metgaberId);const c=m&&(m.creneaux||[])[a.creneauIdx];return c?c.matiere:null;
+  }).filter(Boolean));
   const compat=[];
-  getM().forEach(m=>{
+  metgabrim.forEach(m=>{
     (m.creneaux||[]).forEach((c,ci)=>{
       if(!(t.matieres||[]).includes(c.matiere))return;
       if(covered.has(c.matiere))return;
-      const disposCompatibles=(t.disponibilites||[]).filter(td=>td.matiere===c.matiere&&td.jour===c.jour&&td.debut<c.fin&&td.fin>c.debut);
+      const disposCompatibles=(t.disponibilites||[]).filter(td=>
+        td.matiere===c.matiere&&td.jour===c.jour&&td.debut<c.fin&&td.fin>c.debut
+      );
       const dispoOk=!t.disponibilites||!t.disponibilites.length||disposCompatibles.length>0;
       if(!dispoOk)return;
-      const slotsLibres=slotsLibresDansCreneau(m,ci);
+      const slotsLibres=slotsLibresDansCreneau(m,ci,talmidim);
       if(!slotsLibres.length)return;
-      // Premier slot compatible avec dispo élève
+      // Trouver le premier slot dans la dispo de l'élève
       let meilleurSlot=null;
       if(!t.disponibilites||!t.disponibilites.length){
         meilleurSlot=slotsLibres[0];
       } else {
         for(const dispo of disposCompatibles){
-          for(const slot of slotsLibres){
-            if(slot.debut>=dispo.debut&&slot.fin<=dispo.fin){meilleurSlot=slot;break;}
-          }
-          if(meilleurSlot)break;
+          const s=slotsLibres.find(s=>s.debut>=dispo.debut&&s.fin<=dispo.fin);
+          if(s){meilleurSlot=s;break;}
         }
       }
       if(meilleurSlot)compat.push({m,c,ci,slot:meilleurSlot,slotsLibres});
@@ -1006,21 +1019,22 @@ function rechercherShiduch(){
   const jour=document.getElementById('s-jour').value,debut=document.getElementById('s-debut').value,fin=document.getElementById('s-fin').value;
   const el=document.getElementById('resultats-shiduch');
   const res=[];
-  getM().forEach(m=>{
+  const talmidim=getT();
+  const metgabrim=getM();
+  metgabrim.forEach(m=>{
     (m.creneaux||[]).forEach((c,ci)=>{
       if(sSelectedMatiere&&c.matiere!==sSelectedMatiere)return;
       if(jour&&c.jour!==jour)return;
       if(debut&&fin&&!(c.debut<fin&&c.fin>debut))return;
       if(debut&&!fin&&c.fin<=debut)return;
       if(!debut&&fin&&c.debut>=fin)return;
-      // Vérifier si ce מתגבר est physiquement occupé à ce créneau (autre matière même heure)
-      const physiquementOccupe=(m.creneaux||[]).some((c2,ci2)=>
-        ci2!==ci && c2.jour===c.jour && c2.debut===c.debut && c2.fin===c.fin &&
-        c2.eleves && c2.eleves.length>0
-      );
-      const slotsLibres=slotsLibresDansCreneau(m,ci);
-      const compat=getT().filter(t=>{
-        const deja=(t.affectations||[]).filter(a=>a.actif!==false).some(a=>{const m2=getM().find(x=>x.id===a.metgaberId);const c2=m2&&(m2.creneaux||[])[a.creneauIdx];return c2&&c2.matiere===c.matiere;});
+      const physiquementOccupe=(m.creneaux||[]).some((c2,ci2)=>{
+        if(ci2===ci||c2.jour!==c.jour)return false;
+        return talmidim.some(t=>(t.affectations||[]).some(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci2&&a.debutSlot));
+      });
+      const slotsLibres=slotsLibresDansCreneau(m,ci,talmidim);
+      const compat=talmidim.filter(t=>{
+        const deja=(t.affectations||[]).filter(a=>a.actif!==false).some(a=>{const m2=metgabrim.find(x=>x.id===a.metgaberId);const c2=m2&&(m2.creneaux||[])[a.creneauIdx];return c2&&c2.matiere===c.matiere;});
         if(deja)return false;
         if(!(t.matieres||[]).includes(c.matiere))return false;
         if(!t.disponibilites||!t.disponibilites.length)return true;
@@ -1048,10 +1062,16 @@ function rechercherShiduch(){
     ${!r.physiquementOccupe&&r.slotsLibres&&r.slotsLibres.length&&r.compat.length?`<div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
       <div style="font-size:13px;color:#888;margin-bottom:8px;">תלמידים ממתינים מתאימים:</div>
       ${r.compat.map(t=>{
-        const slot=r.slotsLibres[0];
+        // Trouver le bon slot selon la dispo de l'élève
+        const disposT=(t.disponibilites||[]).filter(d=>d.matiere===r.c.matiere&&d.jour===r.c.jour&&d.debut<r.c.fin&&d.fin>r.c.debut);
+        let slotPropose=r.slotsLibres[0];
+        if(disposT.length){
+          const s=r.slotsLibres.find(s=>disposT.some(d=>s.debut>=d.debut&&s.fin<=d.fin));
+          if(s)slotPropose=s;
+        }
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
-          <div><strong>${t.nom}</strong>${t.tel?` — 📞 ${t.tel}`:''}<span style="font-size:12px;color:#666;margin-right:6px;"> ${slot.debut}–${slot.fin}</span></div>
-          <button class="btn btn-success btn-sm" onclick="affecter('${r.m.id}',${r.ci},'${t.id}','${slot.debut}','${slot.fin}')">שדך ✓</button>
+          <div><strong>${t.nom}</strong>${t.tel?` — 📞 ${t.tel}`:''}<span style="font-size:12px;color:#166534;margin-right:6px;"> ${slotPropose.debut}–${slotPropose.fin}</span></div>
+          <button class="btn btn-success btn-sm" onclick="affecter('${r.m.id}',${r.ci},'${t.id}','${slotPropose.debut}','${slotPropose.fin}')">שדך ✓</button>
         </div>`;}).join('')}`:''}
     ${!r.physiquementOccupe&&r.slotsLibres&&r.slotsLibres.length?`<div style="margin-top:10px;"><button class="btn btn-sm" style="background:#fff7ed;color:#c2410c;" onclick="ouvrirAffectationManuelle('${r.m.id}',${r.ci})">+ שידוך ידני</button></div>`:''}
   </div>`).join('');
