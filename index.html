@@ -478,15 +478,21 @@ async function importerDonnees(){
         const d=JSON.parse(e.target.result);
         if(!d.metgabrim||!d.talmidim){showAlert('קובץ לא תקין.');return;}
         setSyncing();
-        // Supprimer tout d'abord
-        for(const m of getM()) await sb.from('metgabrim').delete().eq('id',m.id);
-        for(const t of getT()) await sb.from('talmidim').delete().eq('id',t.id);
-        // Réimporter
-        for(const m of d.metgabrim) await sb.from('metgabrim').upsert(m);
-        for(const t of d.talmidim) await sb.from('talmidim').upsert(t);
+        // Supprimer TOUT depuis Supabase directement (pas depuis le cache)
+        await sb.from('metgabrim').delete().neq('id','__impossible__');
+        await sb.from('talmidim').delete().neq('id','__impossible__');
+        // Insérer les nouvelles données par batch
+        if(d.metgabrim.length>0){
+          const {error:em}=await sb.from('metgabrim').insert(d.metgabrim);
+          if(em){setSyncError(em);showAlert('שגיאה בייבוא מתגברים: '+em.message);return;}
+        }
+        if(d.talmidim.length>0){
+          const {error:et}=await sb.from('talmidim').insert(d.talmidim);
+          if(et){setSyncError(et);showAlert('שגיאה בייבוא תלמידים: '+et.message);return;}
+        }
         await loadAll();
-        showAlert('יובא בהצלחה!');
-      }catch(e){showAlert('קובץ לא תקין.');}
+        showAlert('יובא בהצלחה! '+d.metgabrim.length+' מתגברים ו-'+d.talmidim.length+' תלמידים');
+      }catch(err){showAlert('קובץ לא תקין: '+err.message);}
     };
     reader.readAsText(file);
   });
