@@ -6,152 +6,170 @@
 <title>TUTLY — ניהול מתגברים SCE</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; color: #1a1a2e; min-height: 100vh; direction: rtl; }
-.topbar { background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 1rem 1.5rem; }
-.topbar h1 { font-size: 20px; font-weight: 700; color: #fff; }
-.container { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
-.tabs { display: flex; gap: 5px; margin-bottom: 1.5rem; background: #fff; border-radius: 14px; padding: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); flex-wrap: wrap; }
-.tab { padding: 8px 16px; border: none; border-radius: 10px; background: transparent; cursor: pointer; font-size: 13px; color: #666; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 500; }
-.tab:hover { background: #eff6ff; color: #1e40af; }
-.tab.active { background: #1e40af; color: #fff; font-weight: 600; }
-.section { display: none; }
-.section.active { display: block; }
-.card { background: #fff; border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.card-blue { border-right: 4px solid #2563eb; }
-.card-green { border-right: 4px solid #16a34a; }
-.card-orange { border-right: 4px solid #ea580c; }
-.section-title { font-size: 17px; font-weight: 700; margin-bottom: 1rem; color: #1a1a2e; }
-label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; margin-top: 12px; font-weight: 500; }
-input[type=text], input[type=tel], input[type=time], input[type=number], input[type=password], select {
-  width: 100%; padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px;
-  font-size: 14px; background: #f9fafb; color: #1a1a2e; outline: none;
-  font-family: 'Segoe UI', Arial, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root {
+  --primary:#6366f1; --primary-dark:#4f46e5; --primary-light:#eef2ff;
+  --success:#10b981; --success-light:#ecfdf5;
+  --danger:#ef4444; --danger-light:#fef2f2;
+  --warning:#f59e0b; --warning-light:#fffbeb;
+  --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb;
+  --gray-400:#9ca3af; --gray-500:#6b7280; --gray-700:#374151; --gray-900:#111827;
+  --bg:#f5f5f7; --card:#ffffff;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg:0 10px 25px rgba(0,0,0,0.1),0 4px 10px rgba(0,0,0,0.05);
 }
-input[type=text], input[type=tel], input[type=password] { direction: rtl; text-align: right; }
-input[type=time], input[type=number] { direction: ltr; text-align: left; }
-select { direction: rtl; text-align: right; }
-input:focus, select:focus { border-color: #2563eb; background: #fff; }
-.creneau-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-direction: row-reverse; }
-.creneau-row select { width: auto; flex: 1; min-width: 100px; }
-.creneau-row input[type=time] { width: auto; flex: 1; min-width: 85px; }
-.btn { padding: 9px 18px; border: none; border-radius: 10px; background: #f1f5f9; cursor: pointer; font-size: 13px; color: #374151; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 500; }
-.btn:hover { background: #e2e8f0; }
-.btn:active { transform: scale(0.97); }
-.btn-primary { background: #1e40af; color: #fff; }
-.btn-primary:hover { background: #1d4ed8; }
-.btn-danger { background: #fee2e2; color: #991b1b; }
-.btn-danger:hover { background: #fecaca; }
-.btn-success { background: #dcfce7; color: #166534; }
-.btn-success:hover { background: #bbf7d0; }
-.btn-sm { font-size: 12px; padding: 5px 12px; }
-.tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; background: #eff6ff; color: #1d4ed8; margin: 2px; font-weight: 500; }
-.creneau-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; background: #eff6ff; color: #1d4ed8; margin: 2px; direction: ltr; font-weight: 500; }
-.creneau-tag-pris { background: #fee2e2; color: #991b1b; }
-.remove-c { cursor: pointer; font-size: 14px; color: #dc2626; background: none; border: none; padding: 0 2px; line-height: 1; }
-.empty { color: #aaa; font-size: 14px; text-align: center; padding: 3rem 0; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
-.creneau-form { background: #f8fafc; border-radius: 12px; padding: 14px; margin-top: 8px; border: 1.5px dashed #e2e8f0; }
-.phone-badge { font-size: 13px; color: #888; margin-top: 3px; }
-.row-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; flex-direction: row-reverse; }
-.sep { font-size: 13px; color: #aaa; }
-.name-link { cursor: pointer; color: #1e40af; font-weight: 700; font-size: 15px; }
-.name-link:hover { text-decoration: underline; }
-.badge-attente { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #fff7ed; color: #c2410c; font-weight: 600; margin-right: 6px; }
-.badge-actif { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #dcfce7; color: #166534; font-weight: 600; margin-right: 6px; }
-.modal-backdrop { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,23,42,0.55); z-index: 1000; overflow-y: auto; padding: 2rem 1rem; }
-.modal-box { background: #fff; border-radius: 20px; padding: 1.75rem; width: 100%; max-width: 540px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-.modal-box-wide { background: #fff; border-radius: 20px; padding: 1.75rem; width: 100%; max-width: 900px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-.dialog-box { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 360px; margin: 5rem auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center; }
-.timetable { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 12px; }
-.timetable th { background: #eff6ff; padding: 9px 4px; text-align: center; border: 1px solid #dbeafe; font-weight: 700; font-size: 12px; color: #1e40af; }
-.timetable td { border: 1px solid #f1f5f9; padding: 3px; text-align: center; height: 38px; vertical-align: middle; min-width: 90px; }
-.timetable .time-col { background: #f8fafc; font-size: 11px; color: #aaa; font-weight: 600; width: 55px; direction: ltr; min-width: 55px; }
-.slot-libre { background: #dcfce7; color: #166534; border-radius: 6px; padding: 4px 5px; font-size: 10px; font-weight: 700; display: block; }
-.slot-pris { background: #fee2e2; color: #991b1b; border-radius: 6px; padding: 3px 5px; font-size: 10px; font-weight: 600; display: block; }
-.matiere-label { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; background: #eff6ff; color: #1d4ed8; margin-top: 2px; }
-.login-box { max-width: 360px; margin: 5rem auto; background: #fff; border-radius: 20px; padding: 2rem; box-shadow: 0 8px 30px rgba(0,0,0,0.1); text-align: center; }
-.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-left: 6px; }
-@keyframes spin { to { transform: rotate(360deg); } }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--gray-900);min-height:100vh;direction:rtl;-webkit-font-smoothing:antialiased;}
+
+/* Sidebar */
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.55);font-weight:500;margin-bottom:2px;transition:all 0.15s;direction:rtl;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(99,102,241,0.25);color:#fff;font-weight:600;}
+.nav-item span{font-size:15px;flex-shrink:0;}
+
+/* Cards */
+.card{background:var(--card);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--gray-200);}
+.card-blue{border-right:3px solid var(--primary);}
+.card-green{border-right:3px solid var(--success);}
+.card-orange{border-right:3px solid var(--warning);}
+
+/* Forms */
+label{font-size:11px;color:var(--gray-500);display:block;margin-bottom:4px;margin-top:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+input[type=text],input[type=tel],input[type=time],input[type=number],input[type=password],select{width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:10px;font-size:14px;background:var(--gray-50);color:var(--gray-900);outline:none;font-family:inherit;transition:border-color 0.15s,box-shadow 0.15s;}
+input[type=text],input[type=tel],input[type=password]{direction:rtl;text-align:right;}
+input[type=time],input[type=number]{direction:ltr;text-align:left;}
+select{direction:rtl;text-align:right;}
+input:focus,select:focus{border-color:var(--primary);background:var(--card);box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
+.creneau-form{background:var(--gray-50);border-radius:10px;padding:12px;margin-top:8px;border:1.5px dashed var(--gray-200);}
+.creneau-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-direction:row-reverse;}
+.creneau-row select{width:auto;flex:1;min-width:100px;}
+.creneau-row input[type=time]{width:auto;flex:1;min-width:85px;}
+
+/* Buttons */
+.btn{padding:8px 16px;border:none;border-radius:8px;background:var(--gray-100);cursor:pointer;font-size:13px;color:var(--gray-700);font-family:inherit;font-weight:500;transition:all 0.15s;}
+.btn:hover{background:var(--gray-200);}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-danger{background:var(--danger-light);color:#b91c1c;}
+.btn-danger:hover{background:#fee2e2;}
+.btn-success{background:var(--success-light);color:#065f46;}
+.btn-success:hover{background:#d1fae5;}
+.btn-sm{font-size:12px;padding:5px 10px;border-radius:6px;}
+
+/* Tags */
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;background:var(--primary-light);color:var(--primary-dark);margin:2px;font-weight:600;}
+.creneau-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;background:var(--primary-light);color:var(--primary-dark);margin:2px;direction:ltr;font-weight:500;}
+.creneau-tag-pris{background:var(--danger-light);color:#b91c1c;}
+.remove-c{cursor:pointer;font-size:13px;color:var(--danger);background:none;border:none;padding:0 2px;line-height:1;opacity:0.6;}
+.remove-c:hover{opacity:1;}
+
+/* Misc */
+.section{display:none;} .section.active{display:block;}
+.empty{color:var(--gray-400);font-size:14px;text-align:center;padding:3rem 0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+.phone-badge{font-size:12px;color:var(--gray-400);margin-top:2px;}
+.row-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;flex-direction:row-reverse;}
+.sep{font-size:13px;color:var(--gray-400);}
+.name-link{cursor:pointer;color:var(--primary);font-weight:700;font-size:15px;}
+.name-link:hover{color:var(--primary-dark);text-decoration:underline;}
+.badge-attente{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;background:var(--warning-light);color:#92400e;font-weight:600;margin-right:4px;}
+.badge-actif{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;background:var(--success-light);color:#065f46;font-weight:600;margin-right:4px;}
+
+/* Modals */
+.modal-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);z-index:1000;overflow-y:auto;padding:2rem 1rem;}
+.modal-box{background:var(--card);border-radius:18px;padding:1.75rem;width:100%;max-width:540px;margin:0 auto;box-shadow:var(--shadow-lg);border:1px solid var(--gray-200);}
+.modal-box-wide{background:var(--card);border-radius:18px;padding:1.75rem;width:100%;max-width:900px;margin:0 auto;box-shadow:var(--shadow-lg);border:1px solid var(--gray-200);}
+.dialog-box{background:var(--card);border-radius:16px;padding:1.75rem;width:100%;max-width:360px;margin:6rem auto;box-shadow:var(--shadow-lg);text-align:center;border:1px solid var(--gray-200);}
+.login-box{max-width:380px;margin:0 auto;background:var(--card);border-radius:20px;padding:2.5rem 2rem;box-shadow:var(--shadow-lg);text-align:center;border:1px solid var(--gray-200);}
+
+/* Spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(99,102,241,0.3);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-left:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Timetable */
+.timetable{width:100%;border-collapse:collapse;font-size:12px;}
+.timetable th{background:var(--gray-50);padding:8px 4px;text-align:center;border:1px solid var(--gray-200);font-weight:600;font-size:12px;color:var(--gray-700);}
+.timetable td{border:1px solid var(--gray-100);padding:3px;text-align:center;height:36px;vertical-align:middle;min-width:90px;}
+.timetable .time-col{background:var(--gray-50);font-size:11px;color:var(--gray-400);font-weight:600;width:55px;direction:ltr;min-width:55px;}
+.slot-libre{background:var(--success-light);color:#065f46;border-radius:6px;padding:3px 5px;font-size:10px;font-weight:600;display:block;}
+.slot-pris{background:var(--danger-light);color:#b91c1c;border-radius:6px;padding:3px 5px;font-size:10px;font-weight:600;display:block;}
+.matiere-label{display:inline-block;padding:1px 6px;border-radius:99px;font-size:10px;background:var(--primary-light);color:var(--primary);margin-top:2px;}
 </style>
 </head>
 <body>
 
 <!-- Login -->
-<div id="login-screen" style="min-height:100vh;background:#eef2f7;display:flex;align-items:center;justify-content:center;">
+<div id="login-screen" style="min-height:100vh;background:var(--bg);display:flex;align-items:center;justify-content:center;">
   <div class="login-box">
-    <div style="font-size:48px;margin-bottom:10px;">🎓</div>
-    <h2 style="color:#1e3a8a;margin-bottom:6px;font-size:22px;">TUTLY</h2>
-    <p style="color:#1e40af;font-size:15px;font-weight:600;margin-bottom:1.5rem;">ניהול מתגברים SCE</p>
+    <div style="width:52px;height:52px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;">🎓</div>
+    <h2 style="color:var(--gray-900);margin-bottom:4px;font-size:22px;font-weight:800;letter-spacing:-0.5px;">TUTLY</h2>
+    <p style="color:var(--primary);font-size:13px;font-weight:600;margin-bottom:1.5rem;">ניהול מתגברים SCE</p>
     <label>סיסמה</label>
     <input type="password" id="login-pass" placeholder="הזן סיסמה..." onkeydown="if(event.key==='Enter')login()" />
     <div style="margin-top:14px;">
-      <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="login()">כניסה</button>
+      <button class="btn btn-primary" style="width:100%;font-size:14px;padding:10px;" onclick="login()">כניסה</button>
     </div>
-    <div id="login-error" style="color:#dc2626;font-size:13px;margin-top:10px;display:none;">סיסמה שגויה</div>
+    <div id="login-error" style="color:var(--danger);font-size:13px;margin-top:10px;display:none;">סיסמה שגויה</div>
   </div>
 </div>
 
 <!-- App -->
 <div id="app-screen" style="display:none;">
-  <div class="topbar">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-      <h1>🎓 TUTLY — ניהול מתגברים SCE</h1>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <div id="stats-bar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-        <div id="sync-status" style="font-size:11px;color:rgba(255,255,255,0.8);"></div>
+<div style="display:flex;min-height:100vh;">
+
+  <!-- Sidebar fixe -->
+  <div style="width:220px;min-height:100vh;background:#18181b;display:flex;flex-direction:column;position:fixed;top:0;right:0;bottom:0;z-index:50;">
+    <div style="padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.07);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🎓</div>
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:15px;letter-spacing:-0.4px;">TUTLY</div>
+          <div style="color:rgba(255,255,255,0.35);font-size:10px;margin-top:1px;">ניהול מתגברים SCE</div>
+        </div>
       </div>
     </div>
+
+    <div style="padding:10px 10px 6px;">
+      <input type="text" id="search-global" placeholder="🔍 חיפוש..." oninput="rechercheRapide()"
+        style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:7px 10px;font-size:12px;color:#fff;width:100%;direction:rtl;text-align:right;outline:none;font-family:inherit;" />
+      <div id="search-results" style="position:absolute;width:200px;z-index:300;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);margin-top:4px;overflow:hidden;"></div>
+    </div>
+
+    <nav style="padding:6px 8px;flex:1;overflow-y:auto;">
+      <div class="nav-item active" onclick="showTab('metgabrim',event)" id="nav-metgabrim"><span>👤</span> מתגברים</div>
+      <div class="nav-item" onclick="showTab('talmidim',event)" id="nav-talmidim"><span>🎓</span> תלמידים</div>
+      <div class="nav-item" onclick="showTab('shiduch',event)" id="nav-shiduch"><span>🔗</span> שידוך</div>
+      <div class="nav-item" onclick="showTab('stats',event)" id="nav-stats"><span>📊</span> סטטיסטיקות</div>
+      <div class="nav-item" onclick="showTab('recap',event)" id="nav-recap"><span>📋</span> דוח חודשי</div>
+      <div class="nav-item" onclick="showTab('gibuy',event)" id="nav-gibuy"><span>💾</span> גיבוי</div>
+    </nav>
+
+    <div style="padding:12px 14px;border-top:1px solid rgba(255,255,255,0.07);">
+      <div id="stats-bar" style="display:flex;flex-direction:column;gap:5px;"></div>
+      <div id="sync-status" style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:6px;"></div>
+    </div>
+    <div style="padding:8px 14px 12px;border-top:1px solid rgba(255,255,255,0.05);">
+      <div style="font-size:10px;color:rgba(255,255,255,0.18);">© 2026 Powered by Ethan Touboul</div>
+    </div>
   </div>
-  <div class="container">
-    <div style="margin-bottom:1rem;">
-      <input type="text" id="search-global" placeholder="🔍 חיפוש מהיר — שם מתגבר או תלמיד..." oninput="rechercheRapide()" style="background:#fff;border-radius:12px;padding:10px 16px;font-size:14px;" />
-      <div id="search-results"></div>
-    </div>
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('metgabrim',event)">מתגברים</button>
-      <button class="tab" onclick="showTab('talmidim',event)">תלמידים</button>
-      <button class="tab" onclick="showTab('shiduch',event)">שידוך</button>
-      <button class="tab" onclick="showTab('recap',event)">דוח חודשי</button>
-      <button class="tab" onclick="showTab('stats',event)">📊 סטטיסטיקות</button>
-      <button class="tab" onclick="showTab('gibuy',event)">גיבוי</button>
-    </div>
+
+  <!-- Zone principale -->
+  <div style="margin-right:220px;flex:1;min-width:0;">
+    <div style="max-width:900px;margin:0 auto;padding:2rem 1.5rem;">
 
     <!-- מתגברים -->
     <div id="tab-metgabrim" class="section active">
-      <p class="section-title">הוספת מתגבר חדש</p>
-      <div class="card">
-        <div class="grid2">
-          <div><label>שם המתגבר</label><input type="text" id="m-nom" placeholder="לדוגמה: אתן לוי" /></div>
-          <div><label>טלפון</label><input type="tel" id="m-tel" placeholder="050-1234567" /></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;color:var(--gray-900);">מתגברים</h2>
+          <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ניהול רשימת המתגברים וזמינויותיהם</p>
         </div>
-        <div style="margin-top:12px;">
-          <label>סוג</label>
-          <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
-            <button id="btn-parach" class="btn btn-sm" style="background:#1e40af;color:#fff;border-radius:20px;" onclick="setStatutM('פר&quot;ח')">פר"ח</button>
-            <button id="btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutM('שכר')">שכר</button>
-          </div>
-          <input type="hidden" id="m-statut" value='פר"ח' />
-        </div>
-
-        <label style="margin-top:14px;">זמינויות (יום + שעות + מקצוע)</label>
-        <div class="creneau-form">
-          <div class="creneau-row">
-            <button class="btn btn-sm" onclick="ajouterCreneauM()">+ הוסף</button>
-            <select id="m-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
-            <input type="time" id="m-fin" value="10:00" />
-            <span class="sep">עד</span>
-            <input type="time" id="m-debut" value="08:00" />
-            <select id="m-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
-          </div>
-          <div id="m-creneaux-temp" style="margin-top:8px;"></div>
-        </div>
-        <div style="margin-top:14px;"><button class="btn btn-primary" onclick="sauvegarderMetgaber()">שמור מתגבר</button></div>
+        <button class="btn btn-primary" onclick="openAddMetgaber()">+ הוסף מתגבר</button>
       </div>
-      <p class="section-title" style="margin-top:1.5rem;">מתגברים רשומים</p>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;flex-direction:row-reverse;align-items:center;">
+      <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-direction:row-reverse;flex-wrap:wrap;">
         <button class="btn btn-sm" id="btn-tri-m" onclick="toggleTriM()">א-ב ↕</button>
         <select id="filtre-matiere-m" onchange="renderMetgabrim()" style="width:auto;font-size:13px;padding:5px 10px;">
           <option value="">כל המקצועות</option>
@@ -163,30 +181,15 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
 
     <!-- תלמידים -->
     <div id="tab-talmidim" class="section">
-      <p class="section-title">הוספת תלמיד חדש</p>
-      <div class="card">
-        <div class="grid2">
-          <div><label>שם התלמיד</label><input type="text" id="t-nom" placeholder="לדוגמה: דוד כהן" /></div>
-          <div><label>טלפון</label><input type="tel" id="t-tel" placeholder="050-9876543" /></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">תלמידים</h2>
+          <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ניהול רשימת התלמידים ושידוכיהם</p>
         </div>
-
-        <label style="margin-top:14px;">זמינויות ומקצועות</label>
-        <div class="creneau-form">
-          <div class="creneau-row">
-            <button class="btn btn-sm" onclick="ajouterCreneauT()">+ הוסף</button>
-            <select id="t-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
-            <input type="time" id="t-fin" value="10:00" />
-            <span class="sep">עד</span>
-            <input type="time" id="t-debut" value="08:00" />
-            <select id="t-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
-          </div>
-          <div id="t-creneaux-temp" style="margin-top:8px;"></div>
-        </div>
-        <div style="margin-top:14px;"><button class="btn btn-primary" onclick="sauvegarderTalmid()">שמור תלמיד</button></div>
+        <button class="btn btn-primary" onclick="openAddTalmid()">+ הוסף תלמיד</button>
       </div>
-      <p class="section-title" style="margin-top:1.5rem;">תלמידים רשומים</p>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-direction:row-reverse;align-items:center;">
-        <button class="btn btn-sm" id="filtre-tous" onclick="filtrerTalmidim('tous')" style="background:#1e40af;color:#fff;">הכל</button>
+      <div style="display:flex;gap:6px;margin-bottom:1rem;flex-direction:row-reverse;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-sm" id="filtre-tous" onclick="filtrerTalmidim('tous')" style="background:var(--primary);color:#fff;">הכל</button>
         <button class="btn btn-sm" id="filtre-attente" onclick="filtrerTalmidim('attente')">ממתינים</button>
         <button class="btn btn-sm" id="filtre-actif" onclick="filtrerTalmidim('actif')">פעילים</button>
         <button class="btn btn-sm" id="btn-tri-t" onclick="toggleTriT()" style="margin-right:auto;">א-ב ↕</button>
@@ -196,7 +199,10 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
 
     <!-- שידוך -->
     <div id="tab-shiduch" class="section">
-      <p class="section-title">שידוך ידני</p>
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">שידוך</h2>
+        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">חיפוש מתגבר פנוי לפי מקצוע ויום</p>
+      </div>
       <div class="card">
         <label>מקצוע</label>
         <div id="s-matieres-chips" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;flex-direction:row-reverse;"></div>
@@ -212,51 +218,59 @@ input:focus, select:focus { border-color: #2563eb; background: #fff; }
       <div id="resultats-shiduch"></div>
     </div>
 
-    <!-- דוח -->
+    <!-- סטטיסטיקות -->
+    <div id="tab-stats" class="section">
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">סטטיסטיקות</h2>
+        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">מצב המערכת בזמן אמת</p>
+      </div>
+      <div id="stats-content"></div>
+    </div>
+
+    <!-- דוח חודשי -->
     <div id="tab-recap" class="section">
-      <p class="section-title">דוח חודשי (15 עד 15)</p>
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">דוח חודשי</h2>
+        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">סיכום שיעורים מה-15 עד ה-15</p>
+      </div>
       <div class="card">
         <div style="display:flex;align-items:flex-end;gap:12px;flex-direction:row-reverse;flex-wrap:wrap;">
           <div style="flex:1;min-width:150px;"><label>חודש</label>
-            <select id="recap-mois">
-              <option value="01">ינואר</option><option value="02">פברואר</option><option value="03">מרץ</option>
-              <option value="04">אפריל</option><option value="05">מאי</option><option value="06">יוני</option>
-              <option value="07">יולי</option><option value="08">אוגוסט</option><option value="09">ספטמבר</option>
-              <option value="10">אוקטובר</option><option value="11">נובמבר</option><option value="12">דצמבר</option>
-            </select>
+            <select id="recap-mois"><option value="01">ינואר</option><option value="02">פברואר</option><option value="03">מרץ</option><option value="04">אפריל</option><option value="05">מאי</option><option value="06">יוני</option><option value="07">יולי</option><option value="08">אוגוסט</option><option value="09">ספטמבר</option><option value="10">אוקטובר</option><option value="11">נובמבר</option><option value="12">דצמבר</option></select>
           </div>
           <div style="flex:1;min-width:100px;"><label>שנה</label><input type="number" id="recap-annee" value="2026" min="2020" max="2040" style="max-width:120px;" /></div>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-primary" onclick="genererRecap()">הצג דוח</button>
-            <button class="btn btn-success" onclick="exporterExcel()">📊 ייצא Excel</button>
-            <button class="btn" style="background:#f1f5f9;" onclick="hadsefRecap()">🖨️ הדפס</button>
+            <button class="btn btn-success" onclick="exporterExcel()">📊 Excel</button>
+            <button class="btn" onclick="hadsefRecap()">🖨️ הדפס</button>
           </div>
         </div>
       </div>
       <div id="recap-content"></div>
     </div>
-  </div>
-    <!-- סטטיסטיקות -->
-    <div id="tab-stats" class="section">
-      <div id="stats-content"></div>
-    </div>
 
     <!-- גיבוי -->
     <div id="tab-gibuy" class="section">
-      <p class="section-title">גיבוי נתונים</p>
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">גיבוי נתונים</h2>
+        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ייצוא וייבוא של נתוני המערכת</p>
+      </div>
       <div class="card">
-        <p style="font-size:14px;color:#666;margin-bottom:14px;">ייצא את כל הנתונים לקובץ גיבוי על המחשב.</p>
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייצא את כל הנתונים לקובץ גיבוי על המחשב.</p>
         <button class="btn btn-success" onclick="exporterDonnees()">📥 ייצא גיבוי JSON</button>
       </div>
-      <div class="card" style="margin-top:12px;">
-        <p style="font-size:14px;color:#666;margin-bottom:14px;">ייבא קובץ גיבוי — הנתונים הקיימים יוחלפו!</p>
+      <div class="card" style="margin-top:10px;">
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייבא קובץ גיבוי — הנתונים הקיימים יוחלפו!</p>
         <input type="file" id="import-file" accept=".json" style="margin-bottom:12px;" />
         <button class="btn btn-primary" onclick="importerDonnees()">📤 ייבא גיבוי</button>
       </div>
     </div>
-    © 2026 TUTLY — כל הזכויות שמורות | Powered by Ethan Touboul
-  </div>
-</div>
+
+    </div><!-- /padding -->
+  </div><!-- /main -->
+</div><!-- /flex -->
+</div><!-- /app-screen -->
+
 
 <script>
 const SUPABASE_URL='https://mumnvwieuipdnilhmmen.supabase.co';
@@ -356,10 +370,11 @@ function closeModal(){const el=document.getElementById('modal-bd');if(el)el.remo
 
 // ---- Tabs ----
 function showTab(t,e){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
-  if(e&&e.target)e.target.classList.add('active');
+  const nav=document.getElementById('nav-'+t);
+  if(nav)nav.classList.add('active');
   if(t==='metgabrim'){updateStats();renderMetgabrim();}
   if(t==='talmidim'){updateStats();renderTalmidim();}
   if(t==='shiduch'){renderSMatieres();document.getElementById('resultats-shiduch').innerHTML='';}
@@ -503,10 +518,22 @@ function updateStats(){
   const m=getM(),t=getT();
   const nb=t.filter(x=>!estActifT(x)).length,nba=t.filter(x=>estActifT(x)).length;
   document.getElementById('stats-bar').innerHTML=`
-    <span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${m.length} מתגברים</span>
-    <span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${t.length} תלמידים</span>
-    <span style="background:rgba(255,200,0,0.3);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${nb} ממתינים</span>
-    <span style="background:rgba(0,255,100,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;">${nba} פעילים</span>`;
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">מתגברים</span>
+      <span style="font-size:13px;font-weight:700;color:#fff;">${m.length}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">תלמידים</span>
+      <span style="font-size:13px;font-weight:700;color:#fff;">${t.length}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">ממתינים</span>
+      <span style="font-size:13px;font-weight:700;color:#f59e0b;">${nb}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">פעילים</span>
+      <span style="font-size:13px;font-weight:700;color:#10b981;">${nba}</span>
+    </div>`;
 }
 
 // ---- Recherche ----
@@ -575,6 +602,91 @@ function renderTCreneauxTemp(){
 function removeTCreneau(i){tCreneauxTemp.splice(i,1);renderTCreneauxTemp();}
 
 // ---- Sauvegarder מתגבר ----
+function openAddMetgaber(){
+  openModal(`<p class="section-title" style="margin-bottom:1rem;">הוספת מתגבר חדש</p>
+    <div class="grid2">
+      <div><label>שם המתגבר</label><input type="text" id="am-nom" placeholder="לדוגמה: אתן לוי" /></div>
+      <div><label>טלפון</label><input type="tel" id="am-tel" placeholder="050-1234567" /></div>
+    </div>
+    <div style="margin-top:12px;"><label>סוג</label>
+      <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
+        <button id="am-btn-parach" class="btn btn-sm" style="background:var(--primary);color:#fff;border-radius:20px;" onclick="setStatutAM('פר&quot;ח')">פר"ח</button>
+        <button id="am-btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutAM('שכר')">שכר</button>
+      </div>
+      <input type="hidden" id="am-statut" value='פר"ח' />
+    </div>
+    <label style="margin-top:14px;">זמינויות</label>
+    <div class="creneau-form">
+      <div class="creneau-row">
+        <button class="btn btn-sm" onclick="ajouterCreneauAM()">+ הוסף</button>
+        <select id="am-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
+        <input type="time" id="am-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="am-debut" value="08:00" />
+        <select id="am-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+      </div>
+      <div id="am-creneaux-temp" style="margin-top:8px;"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="sauvegarderNouveauM()">שמור</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
+  window._amCreneaux=[];renderAMCreneaux();
+}
+function setStatutAM(s){
+  document.getElementById('am-statut').value=s;
+  document.getElementById('am-btn-parach').style.background=s==='פר"ח'?'var(--primary)':'';
+  document.getElementById('am-btn-parach').style.color=s==='פר"ח'?'#fff':'';
+  document.getElementById('am-btn-sakhir').style.background=s==='שכר'?'var(--primary)':'';
+  document.getElementById('am-btn-sakhir').style.color=s==='שכר'?'#fff':'';
+}
+function ajouterCreneauAM(){
+  const j=document.getElementById('am-jour').value,d=document.getElementById('am-debut').value,f=document.getElementById('am-fin').value,mat=document.getElementById('am-matiere').value;
+  if(!d||!f)return;window._amCreneaux.push({jour:j,debut:d,fin:f,matiere:mat,eleves:[]});renderAMCreneaux();
+}
+function renderAMCreneaux(){
+  const el=document.getElementById('am-creneaux-temp');if(!el)return;
+  el.innerHTML=(window._amCreneaux||[]).map((c,i)=>`<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;">${c.matiere}</span><button class="remove-c" onclick="window._amCreneaux.splice(${i},1);renderAMCreneaux()">×</button></span>`).join('');
+}
+async function sauvegarderNouveauM(){
+  const nom=document.getElementById('am-nom').value.trim(),tel=document.getElementById('am-tel').value.trim();
+  const statut=document.getElementById('am-statut').value||'פר"ח';
+  if(!nom){showAlert('נא למלא שם.');return;}
+  if(!(window._amCreneaux||[]).length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
+  const newM={id:crypto.randomUUID(),nom,tel,statut,matieres:[...new Set(window._amCreneaux.map(c=>c.matiere))],creneaux:window._amCreneaux.map(c=>({...c})),created_at:new Date().toISOString()};
+  closeModal();window._amCreneaux=[];await upsertM(newM);
+}
+
+function openAddTalmid(){
+  openModal(`<p class="section-title" style="margin-bottom:1rem;">הוספת תלמיד חדש</p>
+    <div class="grid2">
+      <div><label>שם התלמיד</label><input type="text" id="at-nom" placeholder="לדוגמה: דוד כהן" /></div>
+      <div><label>טלפון</label><input type="tel" id="at-tel" placeholder="050-9876543" /></div>
+    </div>
+    <label style="margin-top:14px;">זמינויות ומקצועות</label>
+    <div class="creneau-form">
+      <div class="creneau-row">
+        <button class="btn btn-sm" onclick="ajouterCreneauAT()">+ הוסף</button>
+        <select id="at-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
+        <input type="time" id="at-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="at-debut" value="08:00" />
+        <select id="at-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
+      </div>
+      <div id="at-dispos-temp" style="margin-top:8px;"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="sauvegarderNouveauT()">שמור</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
+  window._atDispos=[];renderATDispos();
+}
+function ajouterCreneauAT(){
+  const j=document.getElementById('at-jour').value,d=document.getElementById('at-debut').value,f=document.getElementById('at-fin').value,mat=document.getElementById('at-matiere').value;
+  if(!d||!f)return;window._atDispos.push({jour:j,debut:d,fin:f,matiere:mat});renderATDispos();
+}
+function renderATDispos(){
+  const el=document.getElementById('at-dispos-temp');if(!el)return;
+  el.innerHTML=(window._atDispos||[]).map((c,i)=>`<span class="creneau-tag">${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;">${c.matiere}</span><button class="remove-c" onclick="window._atDispos.splice(${i},1);renderATDispos()">×</button></span>`).join('');
+}
+async function sauvegarderNouveauT(){
+  const nom=document.getElementById('at-nom').value.trim(),tel=document.getElementById('at-tel').value.trim();
+  if(!nom){showAlert('נא למלא שם.');return;}
+  if(!(window._atDispos||[]).length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
+  const newId=crypto.randomUUID();
+  const newT={id:newId,nom,tel,matieres:[...new Set(window._atDispos.map(c=>c.matiere))],disponibilites:[...window._atDispos],affectations:[],created_at:new Date().toISOString()};
+  closeModal();window._atDispos=[];await upsertT(newT);afficherCompatibles(newId);
+}
 function setStatutM(s){
   document.getElementById('m-statut').value=s;
   document.getElementById('btn-parach').style.background=s==='פר"ח'?'#1e40af':'';
