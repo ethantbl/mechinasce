@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TUTLY — ניהול מתגברים SCE</title>
+<title>TUTLY — ניהול מתגברים מכינה SCE </title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -153,6 +153,9 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     </div>
     <div style="padding:8px 14px 12px;border-top:1px solid rgba(255,255,255,0.05);">
       <div style="font-size:10px;color:rgba(255,255,255,0.18);">© 2026 Powered by Ethan Touboul</div>
+      <div style="margin-top:8px;">
+        <button onclick="supprimerToutesLesDonnees()" style="font-size:10px;color:rgba(255,255,255,0.2);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">🗑 מחק את כל הנתונים</button>
+      </div>
     </div>
   </div>
 
@@ -474,6 +477,39 @@ function renderStats(){
 }
 
 // ---- Export/Import ----
+function supprimerToutesLesDonnees(){
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='delete-all-bd';bd.style.zIndex='2000';
+  bd.innerHTML=`<div class="dialog-box" style="max-width:400px;">
+    <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:8px;">מחיקת כל הנתונים</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:20px;line-height:1.5;">פעולה זו תמחק לצמיתות את כל המתגברים, התלמידים והשידוכים.<br>אין אפשרות לשחזר!</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-direction:column;">
+      <button id="del-confirm1" class="btn btn-danger" style="font-size:14px;padding:10px;">כן, מחק הכל</button>
+      <button onclick="document.getElementById('delete-all-bd').remove()" class="btn" style="font-size:14px;padding:10px;">ביטול</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bd);
+  document.getElementById('del-confirm1').onclick=()=>{
+    bd.innerHTML=`<div class="dialog-box" style="max-width:400px;">
+      <div style="font-size:32px;margin-bottom:12px;">🔴</div>
+      <div style="font-size:16px;font-weight:700;color:var(--danger);margin-bottom:8px;">אתה בטוח לחלוטין?</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:20px;">לא ניתן לשחזר את הנתונים לאחר המחיקה.</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-direction:column;">
+        <button id="del-confirm2" class="btn btn-danger" style="font-size:14px;padding:10px;background:var(--danger);color:#fff;">מחק לצמיתות</button>
+        <button onclick="document.getElementById('delete-all-bd').remove()" class="btn" style="font-size:14px;padding:10px;">ביטול</button>
+      </div>
+    </div>`;
+    document.getElementById('del-confirm2').onclick=async()=>{
+      bd.remove();
+      setSyncing();
+      await sb.from('metgabrim').delete().neq('id','__impossible__');
+      await sb.from('talmidim').delete().neq('id','__impossible__');
+      await loadAll();
+      showAlert('כל הנתונים נמחקו.');
+    };
+  };
+}
+
 function exporterDonnees(){
   const data={metgabrim:getM(),talmidim:getT(),date:new Date().toLocaleDateString('he-IL')};
   const a=document.createElement('a');
