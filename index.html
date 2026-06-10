@@ -165,12 +165,17 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
 
     <!-- מתגברים -->
     <div id="tab-metgabrim" class="section active">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
-        <div>
-          <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;color:var(--gray-900);">מתגברים</h2>
-          <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ניהול רשימת המתגברים וזמינויותיהם</p>
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
+              <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">מתגברים</h2>
+            </div>
+            <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">ניהול רשימת המתגברים וזמינויותיהם</p>
+          </div>
+          <button class="btn btn-primary" onclick="openAddMetgaber()" style="flex-shrink:0;">+ הוסף</button>
         </div>
-        <button class="btn btn-primary" onclick="openAddMetgaber()">+ הוסף מתגבר</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-direction:row-reverse;flex-wrap:wrap;">
         <button class="btn btn-sm" id="btn-tri-m" onclick="toggleTriM()">א-ב ↕</button>
@@ -184,12 +189,17 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
 
     <!-- תלמידים -->
     <div id="tab-talmidim" class="section">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
-        <div>
-          <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">תלמידים</h2>
-          <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ניהול רשימת התלמידים ושידוכיהם</p>
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
+              <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">תלמידים</h2>
+            </div>
+            <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">ניהול רשימת התלמידים ושידוכיהם</p>
+          </div>
+          <button class="btn btn-primary" onclick="openAddTalmid()" style="flex-shrink:0;">+ הוסף</button>
         </div>
-        <button class="btn btn-primary" onclick="openAddTalmid()">+ הוסף תלמיד</button>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:1rem;flex-direction:row-reverse;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-sm" id="filtre-tous" onclick="filtrerTalmidim('tous')" style="background:var(--primary);color:#fff;">הכל</button>
@@ -202,9 +212,12 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
 
     <!-- שידוך -->
     <div id="tab-shiduch" class="section">
-      <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">שידוך</h2>
-        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">חיפוש מתגבר פנוי לפי מקצוע ויום</p>
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
+          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">שידוך</h2>
+        </div>
+        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">חיפוש מתגבר פנוי לפי מקצוע ויום</p>
       </div>
       <div class="card">
         <label>מקצוע</label>
@@ -223,18 +236,24 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
 
     <!-- סטטיסטיקות -->
     <div id="tab-stats" class="section">
-      <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">סטטיסטיקות</h2>
-        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">מצב המערכת בזמן אמת</p>
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
+          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">סטטיסטיקות</h2>
+        </div>
+        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">מצב המערכת בזמן אמת</p>
       </div>
       <div id="stats-content"></div>
     </div>
 
     <!-- דוח חודשי -->
     <div id="tab-recap" class="section">
-      <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">דוח חודשי</h2>
-        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">סיכום שיעורים מה-15 עד ה-15</p>
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
+          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">דוח חודשי</h2>
+        </div>
+        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">סיכום שיעורים מה-15 עד ה-15</p>
       </div>
       <div class="card">
         <div style="display:flex;align-items:flex-end;gap:12px;flex-direction:row-reverse;flex-wrap:wrap;">
@@ -254,9 +273,12 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
 
     <!-- גיבוי -->
     <div id="tab-gibuy" class="section">
-      <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">גיבוי נתונים</h2>
-        <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ייצוא וייבוא של נתוני המערכת</p>
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
+          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">גיבוי נתונים</h2>
+        </div>
+        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">ייצוא וייבוא של נתוני המערכת</p>
       </div>
       <div class="card">
         <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייצא את כל הנתונים לקובץ גיבוי על המחשב.</p>
@@ -654,7 +676,7 @@ function openAddMetgaber(){
     <label style="margin-top:14px;">זמינויות</label>
     <div class="creneau-form">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauAM()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauAM()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף</button>
         <select id="am-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
         <input type="time" id="am-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="am-debut" value="08:00" />
         <select id="am-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -698,7 +720,7 @@ function openAddTalmid(){
     <label style="margin-top:14px;">זמינויות ומקצועות</label>
     <div class="creneau-form">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauAT()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauAT()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף</button>
         <select id="at-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
         <input type="time" id="at-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="at-debut" value="08:00" />
         <select id="at-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -910,7 +932,7 @@ function ouvrirEditM(id){
     <label style="margin-top:12px;">הוסף זמינות</label>
     <div class="creneau-form" style="margin-top:6px;">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauEM()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauEM()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף</button>
         <select id="em-matiere" style="min-width:130px;">${MATIERES.map(x=>`<option>${x}</option>`).join('')}</select>
         <input type="time" id="em-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="em-debut" value="08:00" />
         <select id="em-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -1148,7 +1170,7 @@ function ouvrirEditT(id){
     <label style="margin-top:12px;">זמינויות ומקצועות</label>
     <div class="creneau-form" style="margin-top:6px;">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauET()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauET()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף</button>
         <select id="et-matiere" style="min-width:130px;">${MATIERES.map(x=>`<option>${x}</option>`).join('')}</select>
         <input type="time" id="et-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="et-debut" value="08:00" />
         <select id="et-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
