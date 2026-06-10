@@ -6,7 +6,7 @@
 <title>TUTLY — ניהול מתגברים SCE</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
 :root {
   --primary:#6366f1; --primary-dark:#4f46e5; --primary-light:#eef2ff;
   --success:#10b981; --success-light:#ecfdf5;
@@ -19,7 +19,7 @@
   --shadow-lg:0 10px 25px rgba(0,0,0,0.1),0 4px 10px rgba(0,0,0,0.05);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--gray-900);min-height:100vh;direction:rtl;-webkit-font-smoothing:antialiased;}
+body{font-family:'Heebo','Inter','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--gray-900);min-height:100vh;direction:rtl;-webkit-font-smoothing:antialiased;}
 
 /* Sidebar */
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.55);font-weight:500;margin-bottom:2px;transition:all 0.15s;direction:rtl;}
@@ -168,13 +168,12 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
       <div style="margin-bottom:2rem;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-              <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
-              <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">מתגברים</h2>
+            <div style="display:inline-flex;align-items:center;background:var(--primary-light);border-radius:12px;padding:6px 16px 6px 12px;margin-bottom:8px;">
+              <span style="font-family:'Heebo',sans-serif;font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;">מתגברים</span>
             </div>
-            <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">ניהול רשימת המתגברים וזמינויותיהם</p>
+            <p style="font-size:13px;color:var(--gray-400);">ניהול רשימת המתגברים וזמינויותיהם</p>
           </div>
-          <button class="btn btn-primary" onclick="openAddMetgaber()" style="flex-shrink:0;">+ הוסף</button>
+          <button class="btn btn-primary" onclick="openAddMetgaber()" style="flex-shrink:0;margin-top:4px;">+ הוסף</button>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-direction:row-reverse;flex-wrap:wrap;">
@@ -192,13 +191,12 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
       <div style="margin-bottom:2rem;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-              <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
-              <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">תלמידים</h2>
+            <div style="display:inline-flex;align-items:center;background:var(--primary-light);border-radius:12px;padding:6px 16px 6px 12px;margin-bottom:8px;">
+              <span style="font-family:'Heebo',sans-serif;font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;">תלמידים</span>
             </div>
-            <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">ניהול רשימת התלמידים ושידוכיהם</p>
+            <p style="font-size:13px;color:var(--gray-400);">ניהול רשימת התלמידים ושידוכיהם</p>
           </div>
-          <button class="btn btn-primary" onclick="openAddTalmid()" style="flex-shrink:0;">+ הוסף</button>
+          <button class="btn btn-primary" onclick="openAddTalmid()" style="flex-shrink:0;margin-top:4px;">+ הוסף</button>
         </div>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:1rem;flex-direction:row-reverse;align-items:center;flex-wrap:wrap;">
@@ -213,11 +211,10 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- שידוך -->
     <div id="tab-shiduch" class="section">
       <div style="margin-bottom:2rem;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
-          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">שידוך</h2>
+        <div style="display:inline-flex;align-items:center;background:var(--primary-light);border-radius:12px;padding:6px 16px 6px 12px;margin-bottom:8px;">
+          <span style="font-family:'Heebo',sans-serif;font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;">שידוך</span>
         </div>
-        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">חיפוש מתגבר פנוי לפי מקצוע ויום</p>
+        <p style="font-size:13px;color:var(--gray-400);">חיפוש מתגבר פנוי לפי מקצוע ויום</p>
       </div>
       <div class="card">
         <label>מקצוע</label>
@@ -237,11 +234,10 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- סטטיסטיקות -->
     <div id="tab-stats" class="section">
       <div style="margin-bottom:2rem;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
-          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">סטטיסטיקות</h2>
+        <div style="display:inline-flex;align-items:center;background:var(--primary-light);border-radius:12px;padding:6px 16px 6px 12px;margin-bottom:8px;">
+          <span style="font-family:'Heebo',sans-serif;font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;">סטטיסטיקות</span>
         </div>
-        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">מצב המערכת בזמן אמת</p>
+        <p style="font-size:13px;color:var(--gray-400);">מצב המערכת בזמן אמת</p>
       </div>
       <div id="stats-content"></div>
     </div>
@@ -249,11 +245,10 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- דוח חודשי -->
     <div id="tab-recap" class="section">
       <div style="margin-bottom:2rem;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
-          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">דוח חודשי</h2>
+        <div style="display:inline-flex;align-items:center;background:var(--primary-light);border-radius:12px;padding:6px 16px 6px 12px;margin-bottom:8px;">
+          <span style="font-family:'Heebo',sans-serif;font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;">דוח חודשי</span>
         </div>
-        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">סיכום שיעורים מה-15 עד ה-15</p>
+        <p style="font-size:13px;color:var(--gray-400);">סיכום שיעורים מה-15 עד ה-15</p>
       </div>
       <div class="card">
         <div style="display:flex;align-items:flex-end;gap:12px;flex-direction:row-reverse;flex-wrap:wrap;">
@@ -274,11 +269,10 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- גיבוי -->
     <div id="tab-gibuy" class="section">
       <div style="margin-bottom:2rem;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-          <div style="width:4px;height:32px;background:var(--primary);border-radius:99px;"></div>
-          <h2 style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--gray-900);line-height:1;">גיבוי נתונים</h2>
+        <div style="display:inline-flex;align-items:center;background:var(--primary-light);border-radius:12px;padding:6px 16px 6px 12px;margin-bottom:8px;">
+          <span style="font-family:'Heebo',sans-serif;font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;">גיבוי נתונים</span>
         </div>
-        <p style="font-size:13px;color:var(--gray-400);margin-right:14px;">ייצוא וייבוא של נתוני המערכת</p>
+        <p style="font-size:13px;color:var(--gray-400);">ייצוא וייבוא של נתוני המערכת</p>
       </div>
       <div class="card">
         <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייצא את כל הנתונים לקובץ גיבוי על המחשב.</p>
@@ -668,8 +662,8 @@ function openAddMetgaber(){
     </div>
     <div style="margin-top:12px;"><label>סוג</label>
       <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
-        <button id="am-btn-parach" class="btn btn-sm" style="background:var(--primary);color:#fff;border-radius:20px;" onclick="setStatutAM('פר&quot;ח')">פר"ח</button>
-        <button id="am-btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutAM('שכר')">שכר</button>
+        <button id="am-btn-parach" class="btn btn-sm" style="background:var(--primary);color:#fff;border-radius:20px;" onclick="setStatutAM('parach')">פר"ח</button>
+        <button id="am-btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutAM('sakhar')">שכר</button>
       </div>
       <input type="hidden" id="am-statut" value='פר"ח' />
     </div>
@@ -687,12 +681,12 @@ function openAddMetgaber(){
   window._amCreneaux=[];renderAMCreneaux();
 }
 function setStatutAM(s){
-  document.getElementById('am-statut').value=s;
-  const isParach=s.includes('פר');
-  document.getElementById('am-btn-parach').style.background=isParach?'var(--primary)':'var(--gray-100)';
-  document.getElementById('am-btn-parach').style.color=isParach?'#fff':'var(--gray-700)';
-  document.getElementById('am-btn-sakhir').style.background=!isParach?'var(--primary)':'var(--gray-100)';
-  document.getElementById('am-btn-sakhir').style.color=!isParach?'#fff':'var(--gray-700)';
+  const val=s==='sakhar'?'שכר':'פר"ח';
+  document.getElementById('am-statut').value=val;
+  document.getElementById('am-btn-parach').style.background=s!=='sakhar'?'var(--primary)':'var(--gray-100)';
+  document.getElementById('am-btn-parach').style.color=s!=='sakhar'?'#fff':'var(--gray-700)';
+  document.getElementById('am-btn-sakhir').style.background=s==='sakhar'?'var(--primary)':'var(--gray-100)';
+  document.getElementById('am-btn-sakhir').style.color=s==='sakhar'?'#fff':'var(--gray-700)';
 }
 function ajouterCreneauAM(){
   const j=document.getElementById('am-jour').value,d=document.getElementById('am-debut').value,f=document.getElementById('am-fin').value,mat=document.getElementById('am-matiere').value;
@@ -747,12 +741,12 @@ async function sauvegarderNouveauT(){
   closeModal();window._atDispos=[];await upsertT(newT);afficherCompatibles(newId);
 }
 function setStatutM(s){
-  document.getElementById('m-statut').value=s;
-  const isParach=s.includes('פר');
-  document.getElementById('btn-parach').style.background=isParach?'var(--primary)':'var(--gray-100)';
-  document.getElementById('btn-parach').style.color=isParach?'#fff':'var(--gray-700)';
-  document.getElementById('btn-sakhir').style.background=!isParach?'var(--primary)':'var(--gray-100)';
-  document.getElementById('btn-sakhir').style.color=!isParach?'#fff':'var(--gray-700)';
+  const val=s==='sakhar'?'שכר':'פר"ח';
+  document.getElementById('m-statut').value=val;
+  document.getElementById('btn-parach').style.background=s!=='sakhar'?'var(--primary)':'var(--gray-100)';
+  document.getElementById('btn-parach').style.color=s!=='sakhar'?'#fff':'var(--gray-700)';
+  document.getElementById('btn-sakhir').style.background=s==='sakhar'?'var(--primary)':'var(--gray-100)';
+  document.getElementById('btn-sakhir').style.color=s==='sakhar'?'#fff':'var(--gray-700)';
 }
 
 async function sauvegarderMetgaber(){
@@ -763,7 +757,7 @@ async function sauvegarderMetgaber(){
   const newM={id:crypto.randomUUID(),nom,tel,statut,matieres:[...new Set(mCreneauxTemp.map(c=>c.matiere))],creneaux:mCreneauxTemp.map(c=>({...c,eleves:[]})),created_at:new Date().toISOString()};
   document.getElementById('m-nom').value='';document.getElementById('m-tel').value='';
   document.getElementById('m-debut').value='08:00';document.getElementById('m-fin').value='10:00';
-  setStatutM('פר"ח');
+  setStatutM('parach');
   mCreneauxTemp=[];renderMCreneauxTemp();
   await upsertM(newM);
 }
@@ -924,8 +918,8 @@ function ouvrirEditM(id){
     <div style="margin-top:12px;">
       <label>סוג</label>
       <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
-        <button id="em-btn-parach" class="btn btn-sm" style="background:${(m.statut||'פר"ח')==='פר"ח'?'#1e40af':'transparent'};color:${(m.statut||'פר"ח')==='פר"ח'?'#fff':''};border-radius:20px;" onclick="setStatutEM('פר&quot;ח')">פר"ח</button>
-        <button id="em-btn-sakhir" class="btn btn-sm" style="background:${m.statut==='שכר'?'#1e40af':'transparent'};color:${m.statut==='שכר'?'#fff':''};border-radius:20px;" onclick="setStatutEM('שכר')">שכר</button>
+        <button id="em-btn-parach" class="btn btn-sm" style="background:${(m.statut||'פר"ח')==='פר"ח'?'#1e40af':'transparent'};color:${(m.statut||'פר"ח')==='פר"ח'?'#fff':''};border-radius:20px;" onclick="setStatutEM('parach')">פר"ח</button>
+        <button id="em-btn-sakhir" class="btn btn-sm" style="background:${m.statut==='שכר'?'#1e40af':'transparent'};color:${m.statut==='שכר'?'#fff':''};border-radius:20px;" onclick="setStatutEM('sakhar')">שכר</button>
       </div>
       <input type="hidden" id="em-statut" value="${m.statut||'פר"ח'}" />
     </div>
@@ -952,12 +946,12 @@ function renderEMCreneaux(){
 }
 function removeEMCreneau(i){editMCreneaux.splice(i,1);renderEMCreneaux();}
 function setStatutEM(s){
-  document.getElementById('em-statut').value=s;
-  const isParach=s.includes('פר');
-  document.getElementById('em-btn-parach').style.background=isParach?'var(--primary)':'var(--gray-100)';
-  document.getElementById('em-btn-parach').style.color=isParach?'#fff':'var(--gray-700)';
-  document.getElementById('em-btn-sakhir').style.background=!isParach?'var(--primary)':'var(--gray-100)';
-  document.getElementById('em-btn-sakhir').style.color=!isParach?'#fff':'var(--gray-700)';
+  const val=s==='sakhar'?'שכר':'פר"ח';
+  document.getElementById('em-statut').value=val;
+  document.getElementById('em-btn-parach').style.background=s!=='sakhar'?'var(--primary)':'var(--gray-100)';
+  document.getElementById('em-btn-parach').style.color=s!=='sakhar'?'#fff':'var(--gray-700)';
+  document.getElementById('em-btn-sakhir').style.background=s==='sakhar'?'var(--primary)':'var(--gray-100)';
+  document.getElementById('em-btn-sakhir').style.color=s==='sakhar'?'#fff':'var(--gray-700)';
 }
 async function sauvegarderEditM(){
   if(!editMId)return;
