@@ -678,11 +678,10 @@ function openAddMetgaber(){
       <div id="am-creneaux-temp" style="margin-top:8px;"></div>
     </div>
     <div class="btn-row"><button class="btn btn-primary" onclick="sauvegarderNouveauM()">שמור</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
-  window._amCreneaux=[];renderAMCreneaux();
+  window._amCreneaux=[];window._amStatut='פר"ח';renderAMCreneaux();
 }
 function setStatutAM(s){
-  const val=s==='sakhar'?'שכר':'פר"ח';
-  document.getElementById('am-statut').value=val;
+  window._amStatut=s==='sakhar'?'שכר':'פר"ח';
   document.getElementById('am-btn-parach').style.background=s!=='sakhar'?'var(--primary)':'var(--gray-100)';
   document.getElementById('am-btn-parach').style.color=s!=='sakhar'?'#fff':'var(--gray-700)';
   document.getElementById('am-btn-sakhir').style.background=s==='sakhar'?'var(--primary)':'var(--gray-100)';
@@ -698,7 +697,7 @@ function renderAMCreneaux(){
 }
 async function sauvegarderNouveauM(){
   const nom=document.getElementById('am-nom').value.trim(),tel=document.getElementById('am-tel').value.trim();
-  const statut=document.getElementById('am-statut').value||'פר"ח';
+  const statut=window._amStatut||'פר"ח';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!(window._amCreneaux||[]).length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
   const newM={id:crypto.randomUUID(),nom,tel,statut,matieres:[...new Set(window._amCreneaux.map(c=>c.matiere))],creneaux:window._amCreneaux.map(c=>({...c})),created_at:new Date().toISOString()};
@@ -905,11 +904,11 @@ function ouvrirFicheM(mId){
   openModal(html,true);
 }
 
-// ---- Edit מתגבר ----
-let editMId=null,editMCreneaux=[];
+let editMId=null,editMCreneaux=[],editMStatut='פר"ח';
 function ouvrirEditM(id){
   editMId=id;const m=getM().find(x=>x.id===id);if(!m)return;
   editMCreneaux=(m.creneaux||[]).map(c=>({...c,eleves:[...(c.eleves||[])]}));
+  editMStatut=m.statut||'פר"ח';
   openModal(`<p class="section-title" style="margin-bottom:1rem;">עריכת מתגבר</p>
     <div class="grid2">
       <div><label>שם</label><input type="text" id="em-nom" value="${m.nom}" /></div>
@@ -946,8 +945,7 @@ function renderEMCreneaux(){
 }
 function removeEMCreneau(i){editMCreneaux.splice(i,1);renderEMCreneaux();}
 function setStatutEM(s){
-  const val=s==='sakhar'?'שכר':'פר"ח';
-  document.getElementById('em-statut').value=val;
+  editMStatut=s==='sakhar'?'שכר':'פר"ח';
   document.getElementById('em-btn-parach').style.background=s!=='sakhar'?'var(--primary)':'var(--gray-100)';
   document.getElementById('em-btn-parach').style.color=s!=='sakhar'?'#fff':'var(--gray-700)';
   document.getElementById('em-btn-sakhir').style.background=s==='sakhar'?'var(--primary)':'var(--gray-100)';
@@ -956,11 +954,10 @@ function setStatutEM(s){
 async function sauvegarderEditM(){
   if(!editMId)return;
   const nom=document.getElementById('em-nom').value.trim(),tel=document.getElementById('em-tel').value.trim();
-  const statut=document.getElementById('em-statut').value||'פר"ח';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!editMCreneaux.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
   const m=getM().find(x=>x.id===editMId);if(!m)return;
-  m.nom=nom;m.tel=tel;m.statut=statut;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
+  m.nom=nom;m.tel=tel;m.statut=editMStatut;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
   closeModal();await upsertM(m);
 }
 
