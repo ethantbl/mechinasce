@@ -262,6 +262,11 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
             <button class="btn" onclick="hadsefRecap()">🖨️ הדפס</button>
           </div>
         </div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-direction:row-reverse;">
+          <button id="recap-filtre-kol" class="btn btn-sm" onclick="setRecapFiltre('kol')" style="background:var(--primary);color:#fff;">הכל</button>
+          <button id="recap-filtre-parach" class="btn btn-sm" onclick="setRecapFiltre('parach')">פר"ח בלבד</button>
+          <button id="recap-filtre-sakhar" class="btn btn-sm" onclick="setRecapFiltre('sakhar')">שכר בלבד</button>
+        </div>
       </div>
       <div id="recap-content"></div>
     </div>
@@ -1362,6 +1367,16 @@ function calcRows(d1,d2){
   });
   return parM;
 }
+let recapFiltre='kol';
+function setRecapFiltre(f){
+  recapFiltre=f;
+  ['kol','parach','sakhar'].forEach(x=>{
+    const b=document.getElementById('recap-filtre-'+x);
+    if(b){b.style.background=x===f?'var(--primary)':'';b.style.color=x===f?'#fff':'';}
+  });
+  genererRecap();
+}
+
 function genererRecap(){
   const mois=document.getElementById('recap-mois').value,annee=parseInt(document.getElementById('recap-annee').value);
   let mp=parseInt(mois)-1,ap=annee;if(mp===0){mp=12;ap--;}
@@ -1374,9 +1389,12 @@ function genererRecap(){
   const parMSakhar=calcRows(d1Sakhar,d2Sakhar);
   const parMParach=calcRows(d1Parach,d2Parach);
 
-  // Filtrer par statut
-  const rowsSakhar=Object.values(parMSakhar).filter(({m})=>m.statut==='שכר');
-  const rowsParach=Object.values(parMParach).filter(({m})=>!(m.statut==='שכר'));
+  // Filtrer selon le choix
+  let rowsSakhar=Object.values(parMSakhar).filter(({m})=>m.statut==='שכר');
+  let rowsParach=Object.values(parMParach).filter(({m})=>!(m.statut==='שכר'));
+
+  if(recapFiltre==='sakhar') rowsParach=[];
+  if(recapFiltre==='parach') rowsSakhar=[];
 
   const tableRows=(entries)=>entries.map(({m,rows})=>{
     const tm=rows.reduce((s,r)=>s+r.nb,0);
