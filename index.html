@@ -909,6 +909,7 @@ function ouvrirEditM(id){
   editMId=id;const m=getM().find(x=>x.id===id);if(!m)return;
   editMCreneaux=(m.creneaux||[]).map(c=>({...c,eleves:[...(c.eleves||[])]}));
   editMStatut=m.statut||'פר"ח';
+  const isSakhar=editMStatut==='שכר';
   openModal(`<p class="section-title" style="margin-bottom:1rem;">עריכת מתגבר</p>
     <div class="grid2">
       <div><label>שם</label><input type="text" id="em-nom" value="${m.nom}" /></div>
@@ -917,8 +918,8 @@ function ouvrirEditM(id){
     <div style="margin-top:12px;">
       <label>סוג</label>
       <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
-        <button id="em-btn-parach" class="btn btn-sm" style="background:${m.statut==='שכר'?'var(--gray-100)':'var(--primary)'};color:${m.statut==='שכר'?'var(--gray-700)':'#fff'};border-radius:20px;" onclick="setStatutEM('parach')">פר"ח</button>
-        <button id="em-btn-sakhir" class="btn btn-sm" style="background:${m.statut==='שכר'?'var(--primary)':'var(--gray-100)'};color:${m.statut==='שכר'?'#fff':'var(--gray-700)'};border-radius:20px;" onclick="setStatutEM('sakhar')">שכר</button>
+        <button id="em-btn-parach" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutEM('parach')">פר"ח</button>
+        <button id="em-btn-sakhir" class="btn btn-sm" style="border-radius:20px;" onclick="setStatutEM('sakhar')">שכר</button>
       </div>
       <input type="hidden" id="em-statut" value="${m.statut||'פר"ח'}" />
     </div>
@@ -934,6 +935,16 @@ function ouvrirEditM(id){
     </div>
     <div class="btn-row"><button class="btn btn-primary" onclick="sauvegarderEditM()">שמור</button><button class="btn" onclick="closeModal()">סגור</button></div>`);
   renderEMCreneaux();
+  // Initialiser les styles des boutons après que le modal est dans le DOM
+  setTimeout(()=>{
+    const isSakhar=editMStatut==='שכר';
+    const bp=document.getElementById('em-btn-parach');
+    const bs=document.getElementById('em-btn-sakhir');
+    if(bp)bp.style.background=!isSakhar?'var(--primary)':'var(--gray-100)';
+    if(bp)bp.style.color=!isSakhar?'#fff':'var(--gray-700)';
+    if(bs)bs.style.background=isSakhar?'var(--primary)':'var(--gray-100)';
+    if(bs)bs.style.color=isSakhar?'#fff':'var(--gray-700)';
+  },50);
 }
 function ajouterCreneauEM(){
   const j=document.getElementById('em-jour').value,d=document.getElementById('em-debut').value,f=document.getElementById('em-fin').value,mat=document.getElementById('em-matiere').value;
