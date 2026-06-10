@@ -167,7 +167,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <div id="tab-metgabrim" class="section active">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
         <div>
-          <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;color:var(--gray-900);">מתגברים</h2>
+          <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;color:var(--gray-900);">מתגברים</h2>
           <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ניהול רשימת המתגברים וזמינויותיהם</p>
         </div>
         <button class="btn btn-primary" onclick="openAddMetgaber()">+ הוסף מתגבר</button>
@@ -186,7 +186,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <div id="tab-talmidim" class="section">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
         <div>
-          <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">תלמידים</h2>
+          <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">תלמידים</h2>
           <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ניהול רשימת התלמידים ושידוכיהם</p>
         </div>
         <button class="btn btn-primary" onclick="openAddTalmid()">+ הוסף תלמיד</button>
@@ -203,7 +203,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- שידוך -->
     <div id="tab-shiduch" class="section">
       <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">שידוך</h2>
+        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">שידוך</h2>
         <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">חיפוש מתגבר פנוי לפי מקצוע ויום</p>
       </div>
       <div class="card">
@@ -224,7 +224,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- סטטיסטיקות -->
     <div id="tab-stats" class="section">
       <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">סטטיסטיקות</h2>
+        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">סטטיסטיקות</h2>
         <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">מצב המערכת בזמן אמת</p>
       </div>
       <div id="stats-content"></div>
@@ -233,7 +233,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- דוח חודשי -->
     <div id="tab-recap" class="section">
       <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">דוח חודשי</h2>
+        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">דוח חודשי</h2>
         <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">סיכום שיעורים מה-15 עד ה-15</p>
       </div>
       <div class="card">
@@ -255,7 +255,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
     <!-- גיבוי -->
     <div id="tab-gibuy" class="section">
       <div style="margin-bottom:1.5rem;">
-        <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">גיבוי נתונים</h2>
+        <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.8px;">גיבוי נתונים</h2>
         <p style="font-size:13px;color:var(--gray-400);margin-top:3px;">ייצוא וייבוא של נתוני המערכת</p>
       </div>
       <div class="card">
@@ -654,7 +654,7 @@ function openAddMetgaber(){
     <label style="margin-top:14px;">זמינויות</label>
     <div class="creneau-form">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauAM()">+ הוסף</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauAM()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
         <select id="am-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
         <input type="time" id="am-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="am-debut" value="08:00" />
         <select id="am-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -666,10 +666,11 @@ function openAddMetgaber(){
 }
 function setStatutAM(s){
   document.getElementById('am-statut').value=s;
-  document.getElementById('am-btn-parach').style.background=s==='פר"ח'?'var(--primary)':'';
-  document.getElementById('am-btn-parach').style.color=s==='פר"ח'?'#fff':'';
-  document.getElementById('am-btn-sakhir').style.background=s==='שכר'?'var(--primary)':'';
-  document.getElementById('am-btn-sakhir').style.color=s==='שכר'?'#fff':'';
+  const isParach=s.includes('פר');
+  document.getElementById('am-btn-parach').style.background=isParach?'var(--primary)':'var(--gray-100)';
+  document.getElementById('am-btn-parach').style.color=isParach?'#fff':'var(--gray-700)';
+  document.getElementById('am-btn-sakhir').style.background=!isParach?'var(--primary)':'var(--gray-100)';
+  document.getElementById('am-btn-sakhir').style.color=!isParach?'#fff':'var(--gray-700)';
 }
 function ajouterCreneauAM(){
   const j=document.getElementById('am-jour').value,d=document.getElementById('am-debut').value,f=document.getElementById('am-fin').value,mat=document.getElementById('am-matiere').value;
@@ -697,7 +698,7 @@ function openAddTalmid(){
     <label style="margin-top:14px;">זמינויות ומקצועות</label>
     <div class="creneau-form">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauAT()">+ הוסף</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauAT()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
         <select id="at-matiere" style="min-width:140px;"><option>מתמטיקה</option><option>מבוא לפיזיקה 1</option><option>מבוא לפיזיקה 2</option><option>גוף קשיח</option></select>
         <input type="time" id="at-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="at-debut" value="08:00" />
         <select id="at-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -725,10 +726,11 @@ async function sauvegarderNouveauT(){
 }
 function setStatutM(s){
   document.getElementById('m-statut').value=s;
-  document.getElementById('btn-parach').style.background=s==='פר"ח'?'#1e40af':'';
-  document.getElementById('btn-parach').style.color=s==='פר"ח'?'#fff':'';
-  document.getElementById('btn-sakhir').style.background=s==='שכר'?'#1e40af':'';
-  document.getElementById('btn-sakhir').style.color=s==='שכר'?'#fff':'';
+  const isParach=s.includes('פר');
+  document.getElementById('btn-parach').style.background=isParach?'var(--primary)':'var(--gray-100)';
+  document.getElementById('btn-parach').style.color=isParach?'#fff':'var(--gray-700)';
+  document.getElementById('btn-sakhir').style.background=!isParach?'var(--primary)':'var(--gray-100)';
+  document.getElementById('btn-sakhir').style.color=!isParach?'#fff':'var(--gray-700)';
 }
 
 async function sauvegarderMetgaber(){
@@ -908,7 +910,7 @@ function ouvrirEditM(id){
     <label style="margin-top:12px;">הוסף זמינות</label>
     <div class="creneau-form" style="margin-top:6px;">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauEM()">+ הוסף</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauEM()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
         <select id="em-matiere" style="min-width:130px;">${MATIERES.map(x=>`<option>${x}</option>`).join('')}</select>
         <input type="time" id="em-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="em-debut" value="08:00" />
         <select id="em-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -929,10 +931,11 @@ function renderEMCreneaux(){
 function removeEMCreneau(i){editMCreneaux.splice(i,1);renderEMCreneaux();}
 function setStatutEM(s){
   document.getElementById('em-statut').value=s;
-  document.getElementById('em-btn-parach').style.background=s==="פר\"ח"?'#1e40af':'';
-  document.getElementById('em-btn-parach').style.color=s==="פר\"ח"?'#fff':'';
-  document.getElementById('em-btn-sakhir').style.background=s==='שכר'?'#1e40af':'';
-  document.getElementById('em-btn-sakhir').style.color=s==='שכר'?'#fff':'';
+  const isParach=s.includes('פר');
+  document.getElementById('em-btn-parach').style.background=isParach?'var(--primary)':'var(--gray-100)';
+  document.getElementById('em-btn-parach').style.color=isParach?'#fff':'var(--gray-700)';
+  document.getElementById('em-btn-sakhir').style.background=!isParach?'var(--primary)':'var(--gray-100)';
+  document.getElementById('em-btn-sakhir').style.color=!isParach?'#fff':'var(--gray-700)';
 }
 async function sauvegarderEditM(){
   if(!editMId)return;
@@ -1145,7 +1148,7 @@ function ouvrirEditT(id){
     <label style="margin-top:12px;">זמינויות ומקצועות</label>
     <div class="creneau-form" style="margin-top:6px;">
       <div class="creneau-row">
-        <button class="btn btn-sm" onclick="ajouterCreneauET()">+ הוסף</button>
+        <button class="btn btn-sm" onclick="ajouterCreneauET()" style="background:var(--primary);color:#fff;font-weight:600;padding:7px 14px;">+ הוסף זמינות</button>
         <select id="et-matiere" style="min-width:130px;">${MATIERES.map(x=>`<option>${x}</option>`).join('')}</select>
         <input type="time" id="et-fin" value="10:00" /><span class="sep">עד</span><input type="time" id="et-debut" value="08:00" />
         <select id="et-jour"><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select>
@@ -1338,39 +1341,81 @@ function calcRows(d1,d2){
 function genererRecap(){
   const mois=document.getElementById('recap-mois').value,annee=parseInt(document.getElementById('recap-annee').value);
   let mp=parseInt(mois)-1,ap=annee;if(mp===0){mp=12;ap--;}
-  const d1=new Date(ap,mp-1,15),d2=new Date(annee,parseInt(mois)-1,15);
-  const parM=calcRows(d1,d2);
-  let html=`<div style="margin-bottom:1rem;padding:10px 14px;background:#eff6ff;border-radius:10px;font-size:13px;color:#1e40af;"><strong>תקופה:</strong> ${d1.toLocaleDateString('he-IL')} עד ${d2.toLocaleDateString('he-IL')}</div>`;
-  let total=0;
-  Object.values(parM).forEach(({m,rows})=>{
-    const tm=rows.reduce((s,r)=>s+r.nb,0);total+=tm;
-    html+=`<div class="card card-blue">
+
+  // Période שכר : 15 au 15
+  const d1Sakhar=new Date(ap,mp-1,15),d2Sakhar=new Date(annee,parseInt(mois)-1,15);
+  // Période פר"ח : 1er au 1er
+  const d1Parach=new Date(annee,parseInt(mois)-1,1),d2Parach=new Date(annee,parseInt(mois),1);
+
+  const parMSakhar=calcRows(d1Sakhar,d2Sakhar);
+  const parMParach=calcRows(d1Parach,d2Parach);
+
+  // Filtrer par statut
+  const rowsSakhar=Object.values(parMSakhar).filter(({m})=>m.statut==='שכר');
+  const rowsParach=Object.values(parMParach).filter(({m})=>!(m.statut==='שכר'));
+
+  const tableRows=(entries)=>entries.map(({m,rows})=>{
+    const tm=rows.reduce((s,r)=>s+r.nb,0);
+    return `<div class="card card-blue" style="margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="font-weight:700;font-size:16px;">👤 ${m.nom}</div>
-          <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${(m.statut||'פר&quot;ח')==='שכר'?'#fef9c3':'#ede9fe'};color:${(m.statut||'פר&quot;ח')==='שכר'?'#854d0e':'#5b21b6'};">${m.statut||'פר"ח'}</span>
+          <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${m.statut==='שכר'?'#fef9c3':'#ede9fe'};color:${m.statut==='שכר'?'#854d0e':'#5b21b6'};">${m.statut||'פר"ח'}</span>
         </div>
-        <div style="font-size:13px;color:#1e40af;font-weight:600;">סה"כ: ${tm} שיעורים</div>
+        <div style="font-size:13px;color:var(--primary);font-weight:600;">סה"כ: ${tm} שיעורים</div>
       </div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead>
-        <tr style="background:#eff6ff;">
-          <th style="padding:8px;text-align:right;border:1px solid #dbeafe;">תלמיד</th>
-          <th style="padding:8px;text-align:right;border:1px solid #dbeafe;">טלפון</th>
-          <th style="padding:8px;text-align:center;border:1px solid #dbeafe;">מקצוע</th>
-          <th style="padding:8px;text-align:center;border:1px solid #dbeafe;direction:ltr;">יום ושעה</th>
-          <th style="padding:8px;text-align:center;border:1px solid #dbeafe;">שיעורים</th>
+        <tr style="background:var(--gray-50);">
+          <th style="padding:8px;text-align:right;border:1px solid var(--gray-200);">תלמיד</th>
+          <th style="padding:8px;text-align:right;border:1px solid var(--gray-200);">טלפון</th>
+          <th style="padding:8px;text-align:center;border:1px solid var(--gray-200);">מקצוע</th>
+          <th style="padding:8px;text-align:center;border:1px solid var(--gray-200);direction:ltr;">יום ושעה</th>
+          <th style="padding:8px;text-align:center;border:1px solid var(--gray-200);">שיעורים</th>
         </tr></thead><tbody>
         ${rows.map(r=>`<tr${r.done?' style="opacity:0.6;"':''}>
-          <td style="padding:7px 10px;border:1px solid #f1f5f9;">${r.t.nom}${r.done?' <span style="font-size:10px;color:#aaa;">(סיים)</span>':''}</td>
-          <td style="padding:7px 10px;border:1px solid #f1f5f9;color:#888;">${r.t.tel||'—'}</td>
-          <td style="padding:7px 10px;border:1px solid #f1f5f9;text-align:center;">${r.c.matiere||'—'}</td>
-          <td style="padding:7px 10px;border:1px solid #f1f5f9;text-align:center;direction:ltr;">${r.c.jour} ${r.heures||r.c.debut+'–'+r.c.fin}</td>
-          <td style="padding:7px 10px;border:1px solid #f1f5f9;text-align:center;font-weight:700;color:#1e40af;">${r.nb}</td>
+          <td style="padding:7px 10px;border:1px solid var(--gray-100);">${r.t.nom}${r.done?' <span style="font-size:10px;color:#aaa;">(סיים)</span>':''}</td>
+          <td style="padding:7px 10px;border:1px solid var(--gray-100);color:#888;">${r.t.tel||'—'}</td>
+          <td style="padding:7px 10px;border:1px solid var(--gray-100);text-align:center;">${r.c.matiere||'—'}</td>
+          <td style="padding:7px 10px;border:1px solid var(--gray-100);text-align:center;direction:ltr;">${r.c.jour} ${r.heures||r.c.debut+'–'+r.c.fin}</td>
+          <td style="padding:7px 10px;border:1px solid var(--gray-100);text-align:center;font-weight:700;color:var(--primary);">${r.nb}</td>
         </tr>`).join('')}
       </tbody></table></div>`;
-  });
-  if(!Object.keys(parM).length)html+='<div class="empty">אין שידוכים פעילים לתקופה זו.</div>';
-  else html+=`<div style="text-align:center;padding:12px;background:#1e3a8a;border-radius:12px;color:#fff;font-weight:700;font-size:16px;margin-top:8px;">סה"כ כללי: ${total} שיעורים</div>`;
+  }).join('');
+
+  let html='';
+
+  // Section פר"ח
+  if(rowsParach.length){
+    const totalP=rowsParach.reduce((s,{rows})=>s+rows.reduce((ss,r)=>ss+r.nb,0),0);
+    html+=`<div style="margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:#ede9fe;color:#5b21b6;padding:4px 14px;border-radius:99px;font-size:13px;font-weight:700;">פר"ח</span>
+          <span style="font-size:12px;color:var(--gray-400);">תקופה: ${d1Parach.toLocaleDateString('he-IL')} – ${d2Parach.toLocaleDateString('he-IL')}</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#5b21b6;">סה"כ: ${totalP} שיעורים</span>
+      </div>
+      ${tableRows(rowsParach)}
+    </div>`;
+  }
+
+  // Section שכר
+  if(rowsSakhar.length){
+    const totalS=rowsSakhar.reduce((s,{rows})=>s+rows.reduce((ss,r)=>ss+r.nb,0),0);
+    html+=`<div style="margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:#fef9c3;color:#854d0e;padding:4px 14px;border-radius:99px;font-size:13px;font-weight:700;">שכר</span>
+          <span style="font-size:12px;color:var(--gray-400);">תקופה: ${d1Sakhar.toLocaleDateString('he-IL')} – ${d2Sakhar.toLocaleDateString('he-IL')}</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#854d0e;">סה"כ: ${totalS} שיעורים</span>
+      </div>
+      ${tableRows(rowsSakhar)}
+    </div>`;
+  }
+
+  if(!rowsParach.length&&!rowsSakhar.length) html='<div class="empty">אין שידוכים פעילים לתקופה זו.</div>';
+
   document.getElementById('recap-content').innerHTML=html;
 }
 function exporterExcel(){
