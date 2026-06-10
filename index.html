@@ -336,7 +336,7 @@ function getM(){return cachedM;}
 function getT(){return cachedT;}
 async function upsertM(m){
   setSyncing();
-  const {error}=await sb.from('metgabrim').upsert({id:m.id,nom:m.nom,tel:m.tel||'',matieres:m.matieres,creneaux:m.creneaux,created_at:m.created_at||new Date().toISOString()});
+  const {error}=await sb.from('metgabrim').upsert({id:m.id,nom:m.nom,tel:m.tel||'',statut:m.statut||'פר"ח',matieres:m.matieres,creneaux:m.creneaux,created_at:m.created_at||new Date().toISOString()});
   if(error){setSyncError(error);return false;}
   setSynced(); await loadAll(); return true;
 }
