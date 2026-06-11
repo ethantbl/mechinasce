@@ -838,24 +838,32 @@ function ouvrirFicheM(mId){
   JOURS.forEach(j=>{planning[j]=[];});
 
   (m.creneaux||[]).forEach((c,ci)=>{
-    // Afficher les slots RÉELLEMENT affectés
+    // Slots réellement affectés pour ce créneau
     const affectationsCreneaux=[];
     talmidim.forEach(t=>{
       (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci&&a.debutSlot).forEach(a=>{
         affectationsCreneaux.push({debut:a.debutSlot,fin:a.finSlot,eleveNom:t.nom,matiere:c.matiere});
       });
     });
-    // Trier par heure
     affectationsCreneaux.sort((a,b)=>a.debut.localeCompare(b.debut));
 
-    // Générer les slots théoriques libres (slots de 2h non pris)
+    // Slots occupés physiquement par une AUTRE matière du même prof au même jour
+    const slotsBloquesAutreMatiere=new Set();
+    (m.creneaux||[]).forEach((c2,ci2)=>{
+      if(ci2===ci||c2.jour!==c.jour)return;
+      talmidim.forEach(t=>{
+        (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci2&&a.debutSlot).forEach(a=>{
+          slotsBloquesAutreMatiere.add(a.debutSlot);
+        });
+      });
+    });
+
     const slotsOccupes=new Set(affectationsCreneaux.map(a=>a.debut));
     const slotsLibres=genererSlots(c.debut,c.fin).filter(s=>!slotsOccupes.has(s.debut));
 
-    // Combiner : affectations réelles + slots libres théoriques
     const tousSlots=[
-      ...affectationsCreneaux.map(a=>({debut:a.debut,fin:a.fin,eleveNom:a.eleveNom,matiere:a.matiere,libre:false})),
-      ...slotsLibres.map(s=>({debut:s.debut,fin:s.fin,eleveNom:null,matiere:c.matiere,libre:true}))
+      ...affectationsCreneaux.map(a=>({debut:a.debut,fin:a.fin,eleveNom:a.eleveNom,matiere:a.matiere,libre:false,bloque:false})),
+      ...slotsLibres.map(s=>({debut:s.debut,fin:s.fin,eleveNom:null,matiere:c.matiere,libre:true,bloque:slotsBloquesAutreMatiere.has(s.debut)}))
     ].sort((a,b)=>a.debut.localeCompare(b.debut));
 
     tousSlots.forEach(s=>planning[c.jour].push(s));
@@ -890,6 +898,12 @@ function ouvrirFicheM(mId){
               <div style="color:#991b1b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.eleveNom}</div>
               <div style="color:#aaa;font-size:10px;">${s.matiere}</div>
             </div>`;
+          } else if(s.bloque){
+            html+=`<div style="background:#fff7ed;border-radius:8px;padding:6px 8px;margin-bottom:4px;font-size:11px;border:1px dashed #fed7aa;">
+              <div style="font-weight:700;color:#c2410c;">${s.debut}–${s.fin}</div>
+              <div style="color:#c2410c;font-size:10px;margin-top:2px;">חסום - מקצוע אחר</div>
+              <div style="color:#aaa;font-size:10px;">${s.matiere}</div>
+            </div>`;
           } else {
             html+=`<div style="background:#f0fdf4;border-radius:8px;padding:6px 8px;margin-bottom:4px;font-size:11px;border:1px dashed #bbf7d0;">
               <div style="font-weight:600;color:#166534;">${s.debut}–${s.fin}</div>
@@ -901,8 +915,9 @@ function ouvrirFicheM(mId){
       html+='</div>';
     });
     html+='</div></div>';
-    html+=`<div style="margin-top:12px;display:flex;gap:16px;font-size:12px;flex-direction:row-reverse;">
+    html+=`<div style="margin-top:12px;display:flex;gap:16px;font-size:12px;flex-direction:row-reverse;flex-wrap:wrap;">
       <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:12px;height:12px;background:#f0fdf4;border:1px dashed #bbf7d0;border-radius:3px;"></span> פנוי</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:12px;height:12px;background:#fff7ed;border:1px dashed #fed7aa;border-radius:3px;"></span> חסום - מקצוע אחר</span>
       <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:12px;height:12px;background:#fee2e2;border-radius:3px;"></span> תפוס</span>
     </div>`;
   }
