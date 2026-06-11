@@ -152,7 +152,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
       <div id="sync-status" style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:6px;"></div>
     </div>
     <div style="padding:8px 14px 12px;border-top:1px solid rgba(255,255,255,0.05);">
-      <div style="font-size:10px;color:rgba(255,255,255,0.18);">© 2026 Powered by Ethan Touboul</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.18);">© 2026 Powered by Ethan Touboul · v1.2</div>
       <div style="margin-top:8px;">
         <button onclick="supprimerToutesLesDonnees()" style="font-size:10px;color:rgba(255,255,255,0.2);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">🗑 מחק את כל הנתונים</button>
       </div>
@@ -784,12 +784,31 @@ function renderMetgabrim(){
           </div>
           ${m.tel?`<div class="phone-badge">📞 ${m.tel}</div>`:''}
           <div style="margin:4px 0;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
-          <div style="margin-top:6px;">${(m.creneaux||[]).length?(m.creneaux||[]).map((c,ci)=>`
-            <span class="creneau-tag${c.eleves&&c.eleves.length?' creneau-tag-pris':''}">
+          <div style="margin-top:6px;">${(m.creneaux||[]).length?(m.creneaux||[]).map((c,ci)=>{
+            // Vérifier si ce créneau est bloqué physiquement par une autre matière
+            const talmidim=getT();
+            const slotsOccupesIci=new Set();
+            talmidim.forEach(t=>{(t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci&&a.debutSlot).forEach(a=>slotsOccupesIci.add(a.debutSlot));});
+            const slotsBloquesAutre=new Set();
+            (m.creneaux||[]).forEach((c2,ci2)=>{
+              if(ci2===ci||c2.jour!==c.jour)return;
+              talmidim.forEach(t=>{(t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id&&a.creneauIdx===ci2&&a.debutSlot).forEach(a=>slotsBloquesAutre.add(a.debutSlot));});
+            });
+            const totalSlots=genererSlots(c.debut,c.fin).length;
+            const nbPris=slotsOccupesIci.size;
+            const nbBloque=genererSlots(c.debut,c.fin).filter(s=>!slotsOccupesIci.has(s.debut)&&slotsBloquesAutre.has(s.debut)).length;
+            const nbLibre=totalSlots-nbPris-nbBloque;
+            let tagClass='creneau-tag';
+            let extra='';
+            if(nbPris>0&&nbLibre===0&&nbBloque===0){tagClass='creneau-tag creneau-tag-pris';extra=`<span style="font-size:10px;">(${nbPris})</span>`;}
+            else if(nbPris>0){extra=`<span style="font-size:10px;">(${nbPris}✓)</span>`;}
+            if(nbBloque>0&&nbLibre===0&&nbPris===0){tagClass='creneau-tag';extra=`<span style="font-size:10px;color:#c2410c;">חסום</span>`;}
+            return `<span class="${tagClass}">
               ${c.jour} ${c.debut}–${c.fin} <span style="font-size:10px;opacity:0.8;">${c.matiere||''}</span>
-              ${c.eleves&&c.eleves.length?`<span style="font-size:10px;">(${c.eleves.length})</span>`:''}
+              ${extra}
               <button class="remove-c" onclick="removeCreneauM('${m.id}',${ci})">×</button>
-            </span>`).join(''):'<span style="font-size:12px;color:#aaa;">אין זמינויות</span>'}</div>
+            </span>`;
+          }).join(''):'<span style="font-size:12px;color:#aaa;">אין זמינויות</span>'}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <button class="btn btn-sm" onclick="ouvrirEditM('${m.id}')">ערוך</button>
