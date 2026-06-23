@@ -152,7 +152,7 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
       <div id="sync-status" style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:6px;"></div>
     </div>
     <div style="padding:8px 14px 12px;border-top:1px solid rgba(255,255,255,0.05);">
-      <div style="font-size:10px;color:rgba(255,255,255,0.18);">© 2026 Powered by Ethan Touboul · v1.3</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.18);">© 2026 Powered by Ethan Touboul · v1.5</div>
       <div style="margin-top:8px;">
         <button onclick="supprimerToutesLesDonnees()" style="font-size:10px;color:rgba(255,255,255,0.2);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">🗑 מחק את כל הנתונים</button>
       </div>
@@ -284,7 +284,9 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
         <button class="btn btn-success" onclick="exporterDonnees()">📥 ייצא גיבוי JSON</button>
       </div>
       <div class="card" style="margin-top:10px;">
-        <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייבא קובץ גיבוי — הנתונים הקיימים יוחלפו!</p>
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייצא רשימת שידוכים לאקסל — פר"ח ושכר בנפרד.</p>
+        <button class="btn btn-primary" onclick="exporterListeExcel()">📊 ייצא רשימת שידוכים</button>
+      </div>
         <input type="file" id="import-file" accept=".json" style="margin-bottom:12px;" />
         <button class="btn btn-primary" onclick="importerDonnees()">📤 ייבא גיבוי</button>
       </div>
@@ -341,7 +343,7 @@ function getM(){return cachedM;}
 function getT(){return cachedT;}
 async function upsertM(m){
   setSyncing();
-  const {error}=await sb.from('metgabrim').upsert({id:m.id,nom:m.nom,tel:m.tel||'',statut:m.statut||'פר"ח',matieres:m.matieres,creneaux:m.creneaux,created_at:m.created_at||new Date().toISOString()});
+  const {error}=await sb.from('metgabrim').upsert({id:m.id,nom:m.nom,tel:m.tel||'',statut:m.statut||'פר"ח',note:m.note||'',matieres:m.matieres,creneaux:m.creneaux,created_at:m.created_at||new Date().toISOString()});
   if(error){setSyncError(error);return false;}
   setSynced(); await loadAll(); return true;
 }
@@ -352,7 +354,7 @@ async function removeM(id){
 }
 async function upsertT(t){
   setSyncing();
-  const {error}=await sb.from('talmidim').upsert({id:t.id,nom:t.nom,tel:t.tel||'',matieres:t.matieres,disponibilites:t.disponibilites,affectations:t.affectations,created_at:t.created_at||new Date().toISOString()});
+  const {error}=await sb.from('talmidim').upsert({id:t.id,nom:t.nom,tel:t.tel||'',note:t.note||'',matieres:t.matieres,disponibilites:t.disponibilites,affectations:t.affectations,created_at:t.created_at||new Date().toISOString()});
   if(error){setSyncError(error);return false;}
   setSynced(); await loadAll(); return true;
 }
@@ -498,6 +500,29 @@ function renderStats(){
 }
 
 // ---- Export/Import ----
+function exporterListeExcel(){
+  const metgabrim=getM(), talmidim=getT();
+  const BOM='\uFEFF';
+  const lignes=[];
+  metgabrim.filter(m=>m.statut!=='שכר').forEach(m=>{
+    talmidim.forEach(t=>{
+      (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id).forEach(a=>{
+        const c=(m.creneaux||[])[a.creneauIdx];if(!c)return;
+        const heures=a.debutSlot?`${a.debutSlot}–${a.finSlot}`:`${c.debut}–${c.fin}`;
+        lignes.push([m.nom,t.nom,c.matiere,c.jour,heures]);
+      });
+    });
+  });
+  if(!lignes.length){showAlert('אין נתונים לייצוא.');return;}
+  let csv=BOM+`"מתגבר","תלמיד","מקצוע","יום","שעה"\n`;
+  csv+=lignes.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`tutly_פרח_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showAlert('הקובץ הורד בהצלחה!');
+}
+
 function supprimerToutesLesDonnees(){
   const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='delete-all-bd';bd.style.zIndex='2000';
   bd.innerHTML=`<div class="dialog-box" style="max-width:400px;">
@@ -672,6 +697,8 @@ function openAddMetgaber(){
       <div><label>שם המתגבר</label><input type="text" id="am-nom" placeholder="לדוגמה: אתן לוי" /></div>
       <div><label>טלפון</label><input type="tel" id="am-tel" placeholder="050-1234567" /></div>
     </div>
+    <label style="margin-top:12px;">הערות</label>
+    <input type="text" id="am-note" placeholder="הערה חופשית..." />
     <div style="margin-top:12px;"><label>סוג</label>
       <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
         <button id="am-btn-parach" class="btn btn-sm" style="background:var(--primary);color:#fff;border-radius:20px;" onclick="setStatutAM('parach')">פר"ח</button>
@@ -709,10 +736,11 @@ function renderAMCreneaux(){
 }
 async function sauvegarderNouveauM(){
   const nom=document.getElementById('am-nom').value.trim(),tel=document.getElementById('am-tel').value.trim();
+  const note=document.getElementById('am-note')?document.getElementById('am-note').value.trim():'';
   const statut=window._amStatut||'פר"ח';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!(window._amCreneaux||[]).length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
-  const newM={id:crypto.randomUUID(),nom,tel,statut,matieres:[...new Set(window._amCreneaux.map(c=>c.matiere))],creneaux:window._amCreneaux.map(c=>({...c})),created_at:new Date().toISOString()};
+  const newM={id:crypto.randomUUID(),nom,tel,statut,note,matieres:[...new Set(window._amCreneaux.map(c=>c.matiere))],creneaux:window._amCreneaux.map(c=>({...c})),created_at:new Date().toISOString()};
   closeModal();window._amCreneaux=[];await upsertM(newM);
 }
 
@@ -722,6 +750,8 @@ function openAddTalmid(){
       <div><label>שם התלמיד</label><input type="text" id="at-nom" placeholder="לדוגמה: דוד כהן" /></div>
       <div><label>טלפון</label><input type="tel" id="at-tel" placeholder="050-9876543" /></div>
     </div>
+    <label style="margin-top:12px;">הערות</label>
+    <input type="text" id="at-note" placeholder="הערה חופשית..." />
     <label style="margin-top:14px;">זמינויות ומקצועות</label>
     <div class="creneau-form">
       <div class="creneau-row">
@@ -745,10 +775,11 @@ function renderATDispos(){
 }
 async function sauvegarderNouveauT(){
   const nom=document.getElementById('at-nom').value.trim(),tel=document.getElementById('at-tel').value.trim();
+  const note=document.getElementById('at-note')?document.getElementById('at-note').value.trim():'';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!(window._atDispos||[]).length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
   const newId=crypto.randomUUID();
-  const newT={id:newId,nom,tel,matieres:[...new Set(window._atDispos.map(c=>c.matiere))],disponibilites:[...window._atDispos],affectations:[],created_at:new Date().toISOString()};
+  const newT={id:newId,nom,tel,note,matieres:[...new Set(window._atDispos.map(c=>c.matiere))],disponibilites:[...window._atDispos],affectations:[],created_at:new Date().toISOString()};
   closeModal();window._atDispos=[];await upsertT(newT);afficherCompatibles(newId);
 }
 function setStatutM(s){
@@ -790,6 +821,7 @@ function renderMetgabrim(){
             <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${(m.statut||'פר"ח')==='שכר'?'#fef9c3':'#ede9fe'};color:${(m.statut||'פר"ח')==='שכר'?'#854d0e':'#5b21b6'};">${m.statut||'פר"ח'}</span>
           </div>
           ${m.tel?`<div class="phone-badge">📞 ${m.tel}</div>`:''}
+          ${m.note?`<div style="font-size:12px;color:var(--gray-500);margin-top:3px;font-style:italic;">📝 ${m.note}</div>`:''}
           <div style="margin:4px 0;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
           <div style="margin-top:6px;">${(m.creneaux||[]).length?(m.creneaux||[]).map((c,ci)=>{
             // Vérifier si ce créneau est bloqué physiquement par une autre matière
@@ -961,6 +993,8 @@ function ouvrirEditM(id){
       <div><label>שם</label><input type="text" id="em-nom" value="${m.nom}" /></div>
       <div><label>טלפון</label><input type="tel" id="em-tel" value="${m.tel||''}" /></div>
     </div>
+    <label style="margin-top:12px;">הערות</label>
+    <input type="text" id="em-note" value="${m.note||''}" placeholder="הערה חופשית..." />
     <div style="margin-top:12px;">
       <label>סוג</label>
       <div style="display:flex;gap:10px;margin-top:6px;flex-direction:row-reverse;">
@@ -1011,10 +1045,11 @@ function setStatutEM(s){
 async function sauvegarderEditM(){
   if(!editMId)return;
   const nom=document.getElementById('em-nom').value.trim(),tel=document.getElementById('em-tel').value.trim();
+  const note=document.getElementById('em-note')?document.getElementById('em-note').value.trim():'';
   if(!nom){showAlert('נא למלא שם.');return;}
   if(!editMCreneaux.length){showAlert('נא להוסיף לפחות זמינות אחת.');return;}
   const m=getM().find(x=>x.id===editMId);if(!m)return;
-  m.nom=nom;m.tel=tel;m.statut=editMStatut;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
+  m.nom=nom;m.tel=tel;m.statut=editMStatut;m.note=note;m.creneaux=editMCreneaux;m.matieres=[...new Set(editMCreneaux.map(c=>c.matiere))];
   closeModal();await upsertM(m);
 }
 
@@ -1161,6 +1196,7 @@ function renderTalmidim(){
         <div style="flex:1;">
           <div style="font-weight:700;font-size:15px;">${t.nom} ${actif?'<span class="badge-actif">פעיל</span>':'<span class="badge-attente">ממתין</span>'}</div>
           ${t.tel?`<div class="phone-badge">📞 ${t.tel}</div>`:''}
+          ${t.note?`<div style="font-size:12px;color:var(--gray-500);margin-top:3px;font-style:italic;">📝 ${t.note}</div>`:''}
           <div style="margin:4px 0;">${(t.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
           ${t.disponibilites&&t.disponibilites.length?`<div style="font-size:12px;color:#888;margin-top:2px;">זמינויות: ${t.disponibilites.map(c=>`${c.jour} ${c.debut}–${c.fin} (${c.matiere||''})`).join(' | ')}</div>`:''}
           ${affDetails.length?`<div style="margin-top:6px;">${affDetails.join('')}</div>`:''}
@@ -1215,6 +1251,8 @@ function ouvrirEditT(id){
       <div><label>שם</label><input type="text" id="et-nom" value="${t.nom}" /></div>
       <div><label>טלפון</label><input type="tel" id="et-tel" value="${t.tel||''}" /></div>
     </div>
+    <label style="margin-top:12px;">הערות</label>
+    <input type="text" id="et-note" value="${t.note||''}" placeholder="הערה חופשית..." />
     <label style="margin-top:12px;">זמינויות ומקצועות</label>
     <div class="creneau-form" style="margin-top:6px;">
       <div class="creneau-row">
@@ -1240,9 +1278,10 @@ function removeETDispo(i){editTDispos.splice(i,1);renderETDispos();}
 async function sauvegarderEditT(){
   if(!editTId)return;
   const nom=document.getElementById('et-nom').value.trim(),tel=document.getElementById('et-tel').value.trim();
+  const note=document.getElementById('et-note')?document.getElementById('et-note').value.trim():'';
   if(!nom){showAlert('נא למלא שם.');return;}
   const t=getT().find(x=>x.id===editTId);if(!t)return;
-  t.nom=nom;t.tel=tel;t.disponibilites=editTDispos;t.matieres=[...new Set(editTDispos.map(c=>c.matiere).filter(Boolean))];
+  t.nom=nom;t.tel=tel;t.note=note;t.disponibilites=editTDispos;t.matieres=[...new Set(editTDispos.map(c=>c.matiere).filter(Boolean))];
   closeModal();await upsertT(t);
 }
 
