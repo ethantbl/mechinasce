@@ -503,15 +503,12 @@ function renderStats(){
 function exporterListeExcel(){
   const metgabrim=getM(), talmidim=getT();
   const BOM='\uFEFF';
-  const sep='\t'; // Tabulation — Excel comprend mieux que virgule pour l'hébreu
+  const sep=';';
 
   let csv=BOM;
-  // En-tête
   csv+=['מתגבר','טלפון','סטטוס','תלמיד','מקצוע','יום','שעה'].join(sep)+'\n';
 
-  // Tous les פר"ח
   metgabrim.filter(m=>m.statut!=='שכר').forEach(m=>{
-    // Trouver toutes les affectations actives de ce מתגבר
     const affectations=[];
     talmidim.forEach(t=>{
       (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id).forEach(a=>{
@@ -520,21 +517,15 @@ function exporterListeExcel(){
         affectations.push([m.nom,m.tel||'',m.statut||'פר"ח',t.nom,c.matiere,c.jour,heures]);
       });
     });
-
     if(affectations.length>0){
       affectations.forEach(row=>{ csv+=row.join(sep)+'\n'; });
     } else {
-      // פר"ח sans élève — afficher quand même
       csv+=[m.nom,m.tel||'',m.statut||'פר"ח','—','—','—','—'].join(sep)+'\n';
     }
   });
 
-  if(csv===BOM+['מתגבר','טלפון','סטטוס','תלמיד','מקצוע','יום','שעה'].join(sep)+'\n'){
-    showAlert('אין מתגברים פר"ח.');return;
-  }
-
   const a=document.createElement('a');
-  a.href='data:text/tab-separated-values;charset=utf-8,'+encodeURIComponent(csv);
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`tutly_פרח_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   showAlert('הקובץ הורד בהצלחה!');
