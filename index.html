@@ -284,8 +284,8 @@ input:focus,select:focus{border-color:var(--primary);background:var(--card);box-
         <button class="btn btn-success" onclick="exporterDonnees()">📥 ייצא גיבוי JSON</button>
       </div>
       <div class="card" style="margin-top:10px;">
-        <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייצא רשימת שידוכים לאקסל — פר"ח ושכר בנפרד.</p>
-        <button class="btn btn-primary" onclick="exporterListeExcel()">📊 ייצא רשימת שידוכים</button>
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:14px;">ייצא רשימת פר"ח לאקסל.</p>
+        <button class="btn btn-primary" onclick="exporterListeExcel()">📊 ייצא רשימת פר"ח</button>
       </div>
         <input type="file" id="import-file" accept=".json" style="margin-bottom:12px;" />
         <button class="btn btn-primary" onclick="importerDonnees()">📤 ייבא גיבוי</button>
@@ -503,21 +503,38 @@ function renderStats(){
 function exporterListeExcel(){
   const metgabrim=getM(), talmidim=getT();
   const BOM='\uFEFF';
-  const lignes=[];
+  const sep='\t'; // Tabulation — Excel comprend mieux que virgule pour l'hébreu
+
+  let csv=BOM;
+  // En-tête
+  csv+=['מתגבר','טלפון','סטטוס','תלמיד','מקצוע','יום','שעה'].join(sep)+'\n';
+
+  // Tous les פר"ח
   metgabrim.filter(m=>m.statut!=='שכר').forEach(m=>{
+    // Trouver toutes les affectations actives de ce מתגבר
+    const affectations=[];
     talmidim.forEach(t=>{
       (t.affectations||[]).filter(a=>a.actif!==false&&a.metgaberId===m.id).forEach(a=>{
         const c=(m.creneaux||[])[a.creneauIdx];if(!c)return;
-        const heures=a.debutSlot?`${a.debutSlot}–${a.finSlot}`:`${c.debut}–${c.fin}`;
-        lignes.push([m.nom,t.nom,c.matiere,c.jour,heures]);
+        const heures=a.debutSlot?`${a.debutSlot}-${a.finSlot}`:`${c.debut}-${c.fin}`;
+        affectations.push([m.nom,m.tel||'',m.statut||'פר"ח',t.nom,c.matiere,c.jour,heures]);
       });
     });
+
+    if(affectations.length>0){
+      affectations.forEach(row=>{ csv+=row.join(sep)+'\n'; });
+    } else {
+      // פר"ח sans élève — afficher quand même
+      csv+=[m.nom,m.tel||'',m.statut||'פר"ח','—','—','—','—'].join(sep)+'\n';
+    }
   });
-  if(!lignes.length){showAlert('אין נתונים לייצוא.');return;}
-  let csv=BOM+`"מתגבר","תלמיד","מקצוע","יום","שעה"\n`;
-  csv+=lignes.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+
+  if(csv===BOM+['מתגבר','טלפון','סטטוס','תלמיד','מקצוע','יום','שעה'].join(sep)+'\n'){
+    showAlert('אין מתגברים פר"ח.');return;
+  }
+
   const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.href='data:text/tab-separated-values;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`tutly_פרח_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   showAlert('הקובץ הורד בהצלחה!');
@@ -934,6 +951,7 @@ function ouvrirFicheM(mId){
       <div style="font-size:20px;font-weight:700;">${m.nom}</div>
       <span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${(m.statut||'פר"ח')==='שכר'?'#fef9c3':'#ede9fe'};color:${(m.statut||'פר"ח')==='שכר'?'#854d0e':'#5b21b6'};margin:4px 0;">${m.statut||'פר"ח'}</span>
       ${m.tel?`<div style="font-size:13px;color:#888;">📞 ${m.tel}</div>`:''}
+      ${m.note?`<div style="font-size:13px;color:var(--gray-500);margin-top:4px;font-style:italic;">📝 ${m.note}</div>`:''}
       <div style="margin-top:6px;">${(m.matieres||[]).map(x=>`<span class="tag">${x}</span>`).join('')}</div>
     </div>
     <button class="btn btn-sm" onclick="closeModal()">✕ סגור</button>
